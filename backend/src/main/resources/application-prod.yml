@@ -1,0 +1,10 @@
+spring:
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    root: WARN
+    com.expensetracker: INFO
+  file:
+    name: /app/logs/expense-tracker.log

@@ -1,0 +1,121 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: expense-tracker-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-expense_tracker}
+      POSTGRES_USER: ${DB_USERNAME:-expense_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-expense_pass}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      # Exposed on the host too, purely for convenience (psql/DBeaver from
+      # elsewhere on the home network). Remove this mapping if you'd rather
+      # keep Postgres reachable only from inside the compose network.
+      - "${DB_HOST_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-expense_user} -d ${DB_NAME:-expense_tracker}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - expense-tracker-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: expense-tracker-backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-expense_tracker}
+      DB_USERNAME: ${DB_USERNAME:-expense_user}
+      DB_PASSWORD: ${DB_PASSWORD:-expense_pass}
+      SERVER_PORT: 8080
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost,http://localhost:80}
+      SECURITY_ENABLED: ${SECURITY_ENABLED:-false}
+      JWT_SECRET: ${JWT_SECRET:-CHANGE_ME_INSECURE_DEFAULT_DO_NOT_USE_IN_PRODUCTION_1234567890}
+      JWT_ACCESS_EXPIRY_MINUTES: ${JWT_ACCESS_EXPIRY_MINUTES:-15}
+      JWT_REFRESH_EXPIRY_DAYS: ${JWT_REFRESH_EXPIRY_DAYS:-30}
+      JWT_COOKIE_SECURE: ${JWT_COOKIE_SECURE:-false}
+      JAVA_OPTS: ${BACKEND_JAVA_OPTS:--Xms256m -Xmx512m}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - backend-logs:/app/logs
+    networks:
+      - expense-tracker-net
+    # Not published to the host by default — the frontend Nginx container
+    # reverse-proxies /api to it over the internal network. Uncomment to
+    # reach the API/Swagger directly during development:
+    # ports:
+    #   - "8080:8080"
+
+  duckdns:
+    image: linuxserver/duckdns:latest
+    container_name: expense-tracker-duckdns
+    restart: unless-stopped
+    environment:
+      - TZ=Etc/UTC
+      - SUBDOMAINS=${DUCKDNS_SUBDOMAIN}
+      - TOKEN=${DUCKDNS_TOKEN}
+      - LOG_FILE=false
+    # Keeps your DuckDNS hostname pointed at your current public IP, checked
+    # every 5 minutes by default — this is what makes a domain usable at all
+    # on a connection without a static IP.
+    networks:
+      - expense-tracker-net
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: expense-tracker-certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    # Long-running renewal loop (Let's Encrypt certs are valid 90 days;
+    # `certbot renew` only actually renews once a cert is within 30 days of
+    # expiry, so checking twice a day is standard and harmless the rest of
+    # the time). Initial issuance is a one-time manual step — see
+    # scripts/init-letsencrypt.sh — since it needs Nginx to already be up
+    # to serve the HTTP-01 challenge, and Nginx needs a cert to start.
+    entrypoint: >
+      sh -c "trap exit TERM; while :; do
+        certbot renew --webroot -w /var/www/certbot --quiet;
+        sleep 12h & wait $${!};
+      done"
+    networks:
+      - expense-tracker-net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: expense-tracker-frontend
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN}
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - certbot-etc:/etc/letsencrypt:ro
+      - certbot-www:/var/www/certbot:ro
+    networks:
+      - expense-tracker-net
+
+networks:
+  expense-tracker-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  backend-logs:
+  certbot-etc:
+  certbot-www:

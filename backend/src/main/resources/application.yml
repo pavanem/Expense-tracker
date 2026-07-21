@@ -76,6 +76,9 @@ app:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:80}
   security:
     enabled: ${SECURITY_ENABLED:false}
+    lockout:
+      max-attempts: ${MAX_LOGIN_ATTEMPTS:5}
+      duration-minutes: ${LOCKOUT_DURATION_MINUTES:15}
   jwt:
     # HS256 signing key — MUST be overridden via JWT_SECRET in any real
     # deployment (see JwtService, which refuses to start on the placeholder

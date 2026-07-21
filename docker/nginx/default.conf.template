@@ -10,6 +10,15 @@
 # small thing, but no reason to hand an attacker your exact patch level.
 server_tokens off;
 
+# Separate from the base image's default /var/log/nginx/{access,error}.log
+# (which stay symlinked to stdout/stderr, so `docker compose logs frontend`
+# keeps working exactly as before). These write to real files instead, at a
+# distinct path, specifically so fail2ban on the host can tail them — see
+# scripts/hardening/. Bind-mounted to ./logs/nginx on the host in
+# docker-compose.yml.
+access_log /var/log/nginx-app/access.log;
+error_log /var/log/nginx-app/error.log warn;
+
 # Rate limiting, keyed by client IP:
 #  - auth_zone: 5 requests/minute for login & register specifically — a
 #    real user never needs more than a couple of attempts a minute; this

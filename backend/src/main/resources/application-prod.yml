@@ -8,3 +8,27 @@ logging:
     com.expensetracker: INFO
   file:
     name: /app/logs/expense-tracker.log
+
+# Swagger UI and the raw OpenAPI spec reveal your entire API surface —
+# fine for local dev, not something to leave open on the public internet.
+# Disabled here regardless of what SecurityConfig's permitAll list says.
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Trimmed to just what Docker's own HEALTHCHECK needs — no need for
+        # /actuator/info or anything else to be reachable at all.
+        include: health
+  endpoint:
+    health:
+      # SecurityConfig has no actual ROLE_ACTUATOR wiring, so
+      # "when-authorized" would behave like "never" anyway — set explicitly
+      # so a future SecurityConfig change can't accidentally start leaking
+      # DB connection details through this.
+      show-details: never

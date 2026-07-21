@@ -1,6 +1,7 @@
 package com.expensetracker.service;
 
 import com.expensetracker.config.JwtProperties;
+import com.expensetracker.config.LockoutProperties;
 import com.expensetracker.dto.AuthResponse;
 import com.expensetracker.dto.ChangePasswordRequest;
 import com.expensetracker.dto.LoginRequest;
@@ -8,6 +9,7 @@ import com.expensetracker.dto.RegisterRequest;
 import com.expensetracker.entity.RefreshToken;
 import com.expensetracker.entity.User;
 import com.expensetracker.entity.UserRole;
+import com.expensetracker.exception.AccountLockedException;
 import com.expensetracker.exception.InvalidCredentialsException;
 import com.expensetracker.exception.InvalidRefreshTokenException;
 import com.expensetracker.exception.RefreshTokenReuseException;
@@ -23,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Service
@@ -36,6 +39,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final JwtProperties jwtProperties;
+    private final LockoutProperties lockoutProperties;
 
     /**
      * Only succeeds while zero users exist — see RegistrationClosedException.
@@ -68,17 +72,45 @@ public class AuthService {
         User user = userRepository.findByUsernameIgnoreCase(request.getUsername())
                 .orElseThrow(InvalidCredentialsException::new);
 
+        if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(LocalDateTime.now())) {
+            long minutesLeft = Duration.between(LocalDateTime.now(), user.getLockedUntil()).toMinutes() + 1;
+            throw new AccountLockedException(
+                    "Too many failed attempts. Try again in about " + minutesLeft + " minute(s).");
+        }
+
         if (!user.isEnabled() || !passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             // Same exception/message whether the user doesn't exist, is
             // disabled, or the password is wrong — no signal either way.
+            registerFailedAttempt(user);
             throw new InvalidCredentialsException();
         }
 
+        user.setFailedLoginAttempts(0);
+        user.setLockedUntil(null);
         user.setLastLoginAt(LocalDateTime.now());
         userRepository.save(user);
         log.info("User id={} logged in", user.getId());
 
         return issueTokens(user, request.getDeviceLabel());
+    }
+
+    /**
+     * Account-based lockout, complementing Nginx's per-IP rate limiting
+     * (Phase 2): an attacker spreading attempts across many IPs would slip
+     * past an IP-based limit but still trips this. Resets to zero on the
+     * next successful login or once the lock itself expires.
+     */
+    private void registerFailedAttempt(User user) {
+        int attempts = user.getFailedLoginAttempts() + 1;
+        if (attempts >= lockoutProperties.maxAttempts()) {
+            user.setLockedUntil(LocalDateTime.now().plusMinutes(lockoutProperties.durationMinutes()));
+            user.setFailedLoginAttempts(0);
+            log.warn("User id={} locked out for {} minutes after {} failed attempts",
+                    user.getId(), lockoutProperties.durationMinutes(), attempts);
+        } else {
+            user.setFailedLoginAttempts(attempts);
+        }
+        userRepository.save(user);
     }
 
     /**

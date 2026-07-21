@@ -1,0 +1,46 @@
+# Copy to /etc/fail2ban/jail.local (or merge into your existing one).
+# Adjust <PROJECT_PATH> to your actual project directory, e.g.
+# /home/pavan/Apps/Expense-Tracker
+
+[DEFAULT]
+# Ban via ufw (not raw iptables) so bans show up in `sudo ufw status` and
+# stay consistent with how the rest of the firewall is managed.
+banaction = ufw
+
+# Escalating ban duration: 1h, then 1h*growth on repeat offenders within a
+# rolling window — a scripted attacker that keeps retrying from the same IP
+# gets locked out for longer each time instead of just waiting out a fixed ban.
+bantime = 1h
+bantime.increment = true
+bantime.factor = 4
+bantime.maxtime = 1w
+findtime = 10m
+
+[sshd]
+enabled = true
+port = ssh
+filter = sshd
+logpath = %(sshd_log)s
+backend = %(sshd_backend)s
+maxretry = 4
+
+# Nginx's own rate limiter (Phase 2) logs "limiting requests, excess..." to
+# the error log whenever it triggers. This jail escalates from "slow that
+# IP down" (Nginx) to "block that IP entirely" (ufw) once it happens
+# repeatedly — ships with fail2ban's default filter set on Debian/Ubuntu.
+[nginx-limit-req]
+enabled = true
+port = http,https
+filter = nginx-limit-req
+logpath = <PROJECT_PATH>/logs/nginx/error.log
+maxretry = 10
+
+# Custom filter (expense-tracker-auth.filter.conf in this same directory —
+# copy it to /etc/fail2ban/filter.d/expense-tracker-auth.conf) for repeated
+# failed/blocked attempts specifically against /api/auth/login and /register.
+[expense-tracker-auth]
+enabled = true
+port = http,https
+filter = expense-tracker-auth
+logpath = <PROJECT_PATH>/logs/nginx/access.log
+maxretry = 8

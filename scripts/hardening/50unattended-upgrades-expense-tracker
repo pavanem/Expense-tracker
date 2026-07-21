@@ -1,0 +1,22 @@
+// Copy to /etc/apt/apt.conf.d/50unattended-upgrades-expense-tracker
+// (or merge the relevant lines into the existing
+// /etc/apt/apt.conf.d/50unattended-upgrades that `unattended-upgrades`
+// installs by default)
+
+// Only security updates auto-install — regular package updates still wait
+// for you, so nothing changes out from under you unexpectedly.
+Unattended-Upgrade::Allowed-Origins {
+    "${distro_id}:${distro_codename}-security";
+    "${distro_id}ESMApps:${distro_codename}-apps-security";
+    "${distro_id}ESM:${distro_codename}-infra-security";
+};
+
+// Reboots automatically ONLY if a kernel/library update requires it, and
+// only at 4am local time — a home server rebooting itself unattended at
+// 3pm because of a kernel patch is its own kind of outage.
+Unattended-Upgrade::Automatic-Reboot "true";
+Unattended-Upgrade::Automatic-Reboot-Time "04:00";
+
+// Removes packages that are no longer needed after an upgrade, keeping
+// disk usage in check on a machine nobody's babysitting closely.
+Unattended-Upgrade::Remove-Unused-Dependencies "true";

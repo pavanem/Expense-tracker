@@ -42,6 +42,8 @@ services:
       JWT_ACCESS_EXPIRY_MINUTES: ${JWT_ACCESS_EXPIRY_MINUTES:-15}
       JWT_REFRESH_EXPIRY_DAYS: ${JWT_REFRESH_EXPIRY_DAYS:-30}
       JWT_COOKIE_SECURE: ${JWT_COOKIE_SECURE:-false}
+      MAX_LOGIN_ATTEMPTS: ${MAX_LOGIN_ATTEMPTS:-5}
+      LOCKOUT_DURATION_MINUTES: ${LOCKOUT_DURATION_MINUTES:-15}
       JAVA_OPTS: ${BACKEND_JAVA_OPTS:--Xms256m -Xmx512m}
     depends_on:
       postgres:
@@ -107,6 +109,9 @@ services:
     volumes:
       - certbot-etc:/etc/letsencrypt:ro
       - certbot-www:/var/www/certbot:ro
+      # Bind mount (not a named volume) so fail2ban on the host can read
+      # these files directly — see scripts/hardening/.
+      - ./logs/nginx:/var/log/nginx-app
     networks:
       - expense-tracker-net
 

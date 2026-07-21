@@ -204,6 +204,12 @@ actually renews within 30 days of expiry.
 If your public IP changes (normal for home connections), DuckDNS updates
 automatically within a few minutes — no action needed on your end.
 
+**Before actually forwarding ports 80/443 on your router**, also work
+through `scripts/hardening/README.md` — `ufw`, SSH hardening, `fail2ban`,
+and automatic security updates. TLS alone secures the connection; it
+doesn't protect the server itself from internet-wide scanning and
+brute-force attempts.
+
 ---
 
 ## Configuration reference

@@ -267,6 +267,66 @@ works — it is not the finish line.
   location (which sets `Cache-Control`) explicitly re-includes
   `security-headers.conf` so it doesn't silently lose HSTS/CSP/etc.
 
-### ⬜ Phase 3: App-level hardening — lockout, CORS, cookies, actuator/swagger (next)
-### ⬜ Phase 4: OS/network hardening — ufw, SSH, fail2ban, auto-updates
-### ⬜ Phase 5: Monitoring — failed-login alerting, renewal checks
+### ✅ Phase 3: App-level hardening — this delivery
+Account lockout (`LockoutProperties`, `AccountLockedException`, the
+`app_user.failed_login_attempts`/`locked_until` columns, and the check in
+`AuthService.login()`) turned out to already be built from earlier in this
+session — verified it end-to-end and found one real bug while doing so:
+
+- **Fixed:** `LockoutProperties` binds `app.security.lockout.max-attempts`/
+  `duration-minutes` as primitive `int`s, but the test `application.yml`
+  (which fully replaces the main one on the test classpath, not merges)
+  didn't define them — every `@SpringBootTest` would have failed to start.
+  Added the missing keys.
+- Wired `MAX_LOGIN_ATTEMPTS` / `LOCKOUT_DURATION_MINUTES` through
+  `docker-compose.yml` and `.env.example` (existed in `application.yml` but
+  wasn't reachable from the deployment config yet).
+- **CORS** tightened: `.env.example` now defaults to the real
+  `https://<domain>` value instead of `localhost`.
+- **Cookies**: `JWT_COOKIE_SECURE` now defaults to `true` in `.env.example`
+  (correct once Phase 1's TLS is live — noted as an explicit exception for
+  anyone still on LAN/Tailscale-only without TLS).
+- **`SECURITY_ENABLED`** now defaults to `true` in `.env.example` for this
+  deployment path — the app still refuses to boot with this true and the
+  placeholder `JWT_SECRET`, so a real secret is a hard prerequisite, not
+  just a recommendation.
+- **Swagger UI / OpenAPI spec disabled in `prod` profile** — these reveal
+  your entire API surface and have no reason to be reachable from the
+  public internet. Disabled at the Spring level (`springdoc.*.enabled: false`)
+  regardless of what Nginx or `SecurityConfig`'s permit-list say.
+- **Actuator** trimmed to just `health` (was `health,info`), `show-details`
+  explicitly `never` in prod (defense-in-depth — it was never actually
+  reachable from outside the Docker network anyway, since Nginx has no
+  `/actuator/` location and the backend port isn't published, but explicit
+  beats implicit here).
+
+### ✅ Phase 4: OS/network hardening — this delivery
+Mostly host-level config rather than app code — `ufw`/SSH/`fail2ban`/
+auto-updates all need to touch the real OS, not a container. What's in the
+repo vs. what you run by hand on the server:
+
+- **`docker/nginx/default.conf.template`** — Nginx now also writes real log
+  files (`access.log`/`error.log`) to a dedicated path, separate from the
+  base image's stdout-symlinked defaults, so `docker compose logs frontend`
+  keeps working exactly as before *and* fail2ban gets something to watch
+- **`docker-compose.yml`** — bind-mounts that log directory to `./logs/nginx`
+  on the host (a bind mount, not a named volume, specifically so fail2ban —
+  which runs on the host, not in Docker — can read it directly)
+- **`scripts/hardening/`** — everything for the host side:
+  - `expense-tracker-auth.filter.conf` — custom fail2ban filter for
+    repeated 401/423/429s against `/api/auth/login` and `/register`
+  - `jail.local` — wires that filter up alongside the standard `sshd` jail
+    and the built-in `nginx-limit-req` jail (which reacts to Phase 2's rate
+    limiting), with escalating ban durations for repeat offenders, banning
+    via `ufw` so it's all visible in one place
+  - `50unattended-upgrades-expense-tracker` — security-only auto-updates,
+    reboots only when required and only at 4am
+  - `README.md` — the actual step-by-step walkthrough, in a careful order
+    for the SSH section specifically (test key-based login and confirm a
+    second session works *before* disabling password auth — the one place
+    a mistake here can lock you out entirely)
+- Flagged your existing `ufw` rules for review: `3389/tcp` (RDP) and `3309`
+  were still open to "Anywhere" from earlier, unrelated setup — worth
+  removing before going public if you don't actually need them
+
+### ⬜ Phase 5: Monitoring — failed-login alerting, renewal checks (next)

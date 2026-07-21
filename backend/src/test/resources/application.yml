@@ -21,6 +21,9 @@ app:
     allowed-origins: http://localhost:3000
   security:
     enabled: false
+    lockout:
+      max-attempts: 5
+      duration-minutes: 15
   jwt:
     secret: test-only-secret-key-not-for-production-use-minimum-256-bits-long
     access-token-expiry-minutes: 15

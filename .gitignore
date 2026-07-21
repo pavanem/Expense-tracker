@@ -21,6 +21,9 @@ frontend/.vite/
 
 # Docker
 docker-data/
+<<<<<<< HEAD
 
 # Nginx logs (bind-mounted for fail2ban — see scripts/hardening/)
 logs/
+=======
+>>>>>>> main

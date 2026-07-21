@@ -1,9 +1,0 @@
-target/
-.mvn/
-*.iml
-.idea/
-.vscode/
-logs/
-*.log
-.git/
-.gitignore

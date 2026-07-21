@@ -7,7 +7,33 @@ hardware, with no cloud dependency.
 
 Built to the project's SRS: Spring Boot 3 / Java 21 backend, React + MUI
 frontend, PostgreSQL, Docker Compose, and a full test suite.
-
+---
+✨ Core Features
+1. 📊 Interactive Dashboard
+Financial Summaries: Real-time spending metrics for Today, Current Month, and Current Year.
+Spending Trend Chart: Interactive 6-month historical spending trends powered by Recharts.
+Top Categories: Visual progress breakdown of top spending categories.
+Recent Transactions & Quick Actions: View latest expenses and quickly jump to category or expense creation.
+👁️ Privacy Toggle: Header toggle to instantly mask monetary values and hide chart data when viewing in public environments.
+2. 💳 Expense Management
+Full CRUD Operations: Create, read, update, and delete individual expense transactions.
+Dynamic Search & Filtering: Instant debounced search by keyword, category, payment mode (Cash, Credit Card, UPI, Bank Transfer, Net Banking, Debit Card), amount bounds (min/max), and date ranges.
+Pagination & Sorting: Dynamic server-side pagination with custom column sorting options.
+3. 🏷️ Category Management
+Custom Categories: Create, edit, and organize spending into tailored categories.
+Activation Lifecycle: Toggle active/inactive status to archive unused categories without losing history.
+Referential Integrity Guards: Prevents deleting categories linked to existing transactions (409 Conflict safeguard).
+4. 📈 Reports & Analytics
+Flexible Timeframes: Aggregates data by Daily, Monthly, Yearly, or Custom Date Ranges.
+Key Metrics: Computes average daily spend, transaction counts, and highest/lowest transactions.
+Visual Analytics: Interactive category breakdown pie charts and timeline trend graphs.
+5. 📥 CSV Data Export
+Custom Exports: Download CSV files for specific dates, custom date ranges, monthly, yearly, category-filtered, or full database backups.
+Structured Naming: Automatically applies standardized export file names (e.g., expenses_2026_07.csv).
+6. 🔒 Authentication & Security
+Registration Lock: Registration is available only when 0 users exist (tailored for single-user self-hosting).
+JWT & Token Rotation: Access tokens in memory (15 min) + httpOnly, SameSite refresh cookies (30 days) with refresh token rotation and reuse/theft detection.
+Account Protection: Password hashing via BCrypt (strength 12), automatic account lockout after failed login attempts, password changes, and "Logout Everywhere" session revocation.
 ---
 
 ## Architecture

@@ -1,0 +1,1 @@
+2026-07-17T17:23:13.505+05:30  WARN 6768 --- [expense-tracker-backend] [HikariPool-1 housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=20h54m56s198ms911µs400ns).

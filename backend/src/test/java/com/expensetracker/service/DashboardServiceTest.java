@@ -48,12 +48,12 @@ class DashboardServiceTest {
         // Object[] shape matches ExpenseRepository#sumAmountByCategoryBetween: [id, name, color, total]
         Object[] categoryRow = new Object[]{1L, "Food", "#FF7043", new BigDecimal("2500.00")};
         when(expenseRepository.sumAmountByCategoryBetween(any(LocalDate.class), any(LocalDate.class)))
-                .thenReturn(List.of(categoryRow));
+                .thenReturn(List.<Object[]>of(categoryRow));
 
         // Object[] shape matches #sumAmountByMonthBetween: [truncated-date, total]
         Object[] monthRow = new Object[]{Date.valueOf(LocalDate.now().withDayOfMonth(1)), new BigDecimal("2500.00")};
         when(expenseRepository.sumAmountByMonthBetween(any(LocalDate.class), any(LocalDate.class)))
-                .thenReturn(List.of(monthRow));
+                .thenReturn(List.<Object[]>of(monthRow));
 
         DashboardResponse dashboard = dashboardService.getDashboard();
 

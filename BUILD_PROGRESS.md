@@ -329,4 +329,41 @@ repo vs. what you run by hand on the server:
   were still open to "Anywhere" from earlier, unrelated setup — worth
   removing before going public if you don't actually need them
 
-### ⬜ Phase 5: Monitoring — failed-login alerting, renewal checks (next)
+### ✅ Phase 5: Monitoring — this delivery
+Push notifications via ntfy.sh (free, no account, Android/iOS app) rather
+than standing up an SMTP server for occasional alerts:
+
+- `scripts/hardening/ntfy.action.conf` + `jail.local`'s `ntfy_topic` —
+  every fail2ban ban (SSH, Nginx rate-limit, or the auth-endpoint filter)
+  pushes a phone notification immediately, not just a log line
+- `scripts/hardening/check-cert-expiry.sh` — daily independent check of the
+  live certificate (not just trusting the renewal loop worked), alerts if
+  under 14 days or already expired
+- `scripts/hardening/logrotate-expense-tracker` — Nginx's file-based logs
+  (added in Phase 4 for fail2ban) get rotated weekly instead of growing forever
+- `scripts/monitoring/backup-db.sh` — nightly local Postgres backup with
+  14-day retention, alerts on failure *or* a suspiciously-small "successful"
+  backup (a silent empty backup is worse than an honest failure)
+- `scripts/monitoring/weekly-summary.sh` — one positive "everything's still
+  alive" heartbeat per week (ban count, latest backup, cert days-remaining)
+  — since the alert scripts above are all negative signals, and silence
+  from them is ambiguous between "nothing happened" and "cron died weeks ago"
+- `scripts/monitoring/notify.sh` — shared ntfy helper for the two new
+  monitoring scripts
+- Full walkthrough in `scripts/hardening/README.md`, sections 6–13
+
+**Note on this delivery:** discovered that `scripts/hardening/` already had
+a working cert-check + fail2ban-notification implementation built earlier
+in this session (different file naming than what I started writing this
+round) — reconciled by keeping the pre-existing, more robust design
+(`ntfy_topic` set directly in `jail.local` rather than depending on
+fail2ban being able to read this project's `.env`) and folding my genuinely
+new pieces (backups, weekly heartbeat) in alongside it rather than
+duplicating.
+
+## Public-hardening arc: all 5 phases complete
+TLS (DuckDNS + Let's Encrypt) → Nginx hardening (headers, rate limiting) →
+app hardening (lockout, CORS, cookies, Swagger/actuator lockdown) →
+OS/network hardening (ufw, SSH, fail2ban, auto-updates) → monitoring
+(alerts, backups, heartbeat). See `scripts/hardening/README.md` for the
+full runbook before actually forwarding ports 80/443.

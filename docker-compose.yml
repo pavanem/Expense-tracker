@@ -1,10 +1,21 @@
 version: "3.9"
 
+# Caps how much disk `docker logs` output can consume per container —
+# separate from Nginx's own file-based logs (see the frontend service's
+# volume mount and scripts/hardening/logrotate-expense-tracker for those).
+# Without this, Docker's default json-file driver keeps every line forever.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   postgres:
     image: postgres:16-alpine
     container_name: expense-tracker-db
     restart: unless-stopped
+    logging: *default-logging
     environment:
       POSTGRES_DB: ${DB_NAME:-expense_tracker}
       POSTGRES_USER: ${DB_USERNAME:-expense_user}
@@ -30,6 +41,7 @@ services:
       dockerfile: Dockerfile
     container_name: expense-tracker-backend
     restart: unless-stopped
+    logging: *default-logging
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-expense_tracker}
@@ -62,6 +74,7 @@ services:
     image: linuxserver/duckdns:latest
     container_name: expense-tracker-duckdns
     restart: unless-stopped
+    logging: *default-logging
     environment:
       - TZ=Etc/UTC
       - SUBDOMAINS=${DUCKDNS_SUBDOMAIN}
@@ -76,6 +89,7 @@ services:
   certbot:
     image: certbot/certbot:latest
     container_name: expense-tracker-certbot
+    logging: *default-logging
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-www:/var/www/certbot
@@ -99,6 +113,7 @@ services:
       dockerfile: frontend/Dockerfile
     container_name: expense-tracker-frontend
     restart: unless-stopped
+    logging: *default-logging
     environment:
       DOMAIN: ${DOMAIN}
     depends_on:

@@ -153,16 +153,150 @@ docker compose exec backend id       # should show a non-root user (see backend/
 docker compose exec frontend id      # nginx worker should be non-root too
 ```
 
+## 7. Set up push notifications (ntfy.sh)
+
+Free, no account, no API keys. Pick a topic name that's hard to guess
+(anyone who knows it can read your notifications — treat it like a
+password), e.g. `pavan-expense-alerts-x7k2`.
+
+1. Install the [ntfy app](https://ntfy.sh/#subscribe) on your Android phone
+   (or just use a browser at `https://ntfy.sh/<your-topic>`).
+2. Subscribe to your topic name in the app.
+3. Set `NTFY_TOPIC` in `.env` to that same topic name.
+4. Test it works:
+   ```bash
+   curl -d "Test notification from your server" "https://ntfy.sh/<your-topic>"
+   ```
+   You should get a push notification within a few seconds.
+
+## 8. Wire fail2ban up to send notifications on every ban
+
+```bash
+sudo cp scripts/hardening/ntfy.action.conf /etc/fail2ban/action.d/ntfy.conf
+sudo nano /etc/fail2ban/jail.local   # set ntfy_topic to your real topic name
+sudo systemctl restart fail2ban
+```
+
+Test it end-to-end (bans your own IP for a minute — only do this from a
+connection you can afford to briefly lose, e.g. not the only way you can
+reach the server):
+```bash
+sudo fail2ban-client set expense-tracker-auth banip 203.0.113.1   # a test/dummy IP, not your own
+```
+You should get a push notification. Then unban it:
+```bash
+sudo fail2ban-client set expense-tracker-auth unbanip 203.0.113.1
+```
+
+## 9. Certificate expiry watchdog
+
+Trusts-but-verifies the automatic renewal loop from Phase 1 — checks the
+live certificate directly rather than assuming the `certbot` container is
+working correctly.
+
+```bash
+chmod +x scripts/hardening/check-cert-expiry.sh
+./scripts/hardening/check-cert-expiry.sh   # test it manually first
+```
+
+Then schedule it daily:
+```bash
+crontab -e
+```
+Add:
+```
+0 9 * * * /home/pavan/Apps/Expense-Tracker/scripts/hardening/check-cert-expiry.sh >> /home/pavan/Apps/Expense-Tracker/logs/cert-check.log 2>&1
+```
+(adjust the path to match your actual project location)
+
+## 10. Log rotation
+
+Phase 4 made Nginx write real log files for fail2ban to watch — without
+rotation those grow forever. Fix that now:
+
+```bash
+sudo cp scripts/hardening/logrotate-expense-tracker /etc/logrotate.d/expense-tracker
+sudo nano /etc/logrotate.d/expense-tracker   # fix the <PROJECT_PATH> placeholders
+sudo logrotate --debug /etc/logrotate.d/expense-tracker   # dry run, no changes made
+```
+
+Docker's own `docker logs` output (separate from the Nginx files above) is
+already capped via `docker-compose.yml`'s logging config (10MB × 3 files
+per container) — no extra setup needed there.
+
+## 11. Automated nightly backups
+
+Security and resilience are two sides of the same coin — a server hardened
+against attack that still has no backup isn't actually safe from data loss
+(disk failure, a bad `docker compose down -v`, human error). Local-only, no
+cloud dependency, per the original SRS.
+
+```bash
+chmod +x scripts/monitoring/backup-db.sh scripts/monitoring/notify.sh
+./scripts/monitoring/backup-db.sh   # test it manually first
+ls -lh backups/
+```
+
+Schedule it nightly:
+```bash
+crontab -e
+```
+Add:
+```
+0 2 * * * cd /home/pavan/Apps/Expense-Tracker && ./scripts/monitoring/backup-db.sh >> logs/backup.log 2>&1
+```
+(adjust the path to match your actual project location)
+
+Alerts to your phone via the same `NTFY_TOPIC` from `.env` if a backup
+fails outright, or "succeeds" with a suspiciously tiny/empty file.
+
+## 12. Weekly heartbeat (optional)
+
+The alerts above are all *negative* signals — silence could mean "nothing
+happened" or could mean cron quietly stopped running weeks ago. This adds
+one positive "still alive" confirmation per week, summarizing fail2ban ban
+counts, latest backup, and certificate days-remaining in one notification.
+
+```bash
+chmod +x scripts/monitoring/weekly-summary.sh
+./scripts/monitoring/weekly-summary.sh   # test it manually first
+```
+
+Schedule it (Monday mornings suggested):
+```
+0 9 * * 1 cd /home/pavan/Apps/Expense-Tracker && ./scripts/monitoring/weekly-summary.sh >> logs/weekly-summary.log 2>&1
+```
+
+`sudo crontab -e` (root's crontab, not your user's) may be needed instead —
+this script's `fail2ban-client status` call requires root. Check which
+applies with `sudo fail2ban-client status` vs. plain `fail2ban-client status`.
+
+## 13. Weekly review habit
+
+Automation catches the routine stuff; a two-minute weekly glance catches
+what it can't:
+
+```bash
+sudo fail2ban-client status                      # anything currently banned?
+docker compose logs backend --since 168h | grep -i "locked out\|reuse detected"
+docker compose ps                                # everything still healthy?
+```
+
 ---
 
 ## What this phase does and doesn't cover
 
-**Covered:** network-level exposure is now minimal (only 80/443/SSH open),
-SSH itself is hardened against brute-force and key theft, repeated
-attackers get automatically firewalled off entirely (not just slowed down),
-and the OS keeps itself patched without you having to remember.
+**Covered:** you now find out — on your phone, within seconds — when
+someone gets banned for hammering your login, and get an independent daily
+check that HTTPS hasn't quietly broken. Container and Nginx logs are
+bounded instead of growing forever. Nightly backups happen automatically
+with failure alerting, and a weekly heartbeat confirms the whole monitoring
+setup — cron, fail2ban, backups, certs — is still alive, not just silent.
 
-**Not covered — Phase 5:** you still have no visibility into *whether*
-you're being attacked unless you go looking (`fail2ban-client status`,
-`docker compose logs`). Phase 5 adds lightweight monitoring/alerting so you
-find out proactively instead of by accident.
+**Not covered, and reasonably out of scope for a personal single-user app:**
+centralized log aggregation (ELK/Loki-style), intrusion detection beyond
+fail2ban's log-pattern matching, and vulnerability scanning of the Docker
+images themselves. If this app's threat model ever grows beyond "protect my
+own household's spending data," those would be the next additions — but
+for what this is, Phases 1–5 cover the real, proportionate risks.
+

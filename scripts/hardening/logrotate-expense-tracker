@@ -1,0 +1,17 @@
+# Copy to /etc/logrotate.d/expense-tracker
+# Adjust <PROJECT_PATH> to your actual project directory.
+#
+# Phase 4 made Nginx write real log files (for fail2ban to watch) instead
+# of only stdout — without rotation, access.log/error.log grow forever.
+
+<PROJECT_PATH>/logs/nginx/*.log {
+    weekly
+    rotate 8
+    compress
+    delaycompress
+    missingok
+    notifempty
+    postrotate
+        cd <PROJECT_PATH> && docker compose exec -T frontend nginx -s reopen 2>/dev/null || true
+    endscript
+}

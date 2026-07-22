@@ -7,6 +7,15 @@
 # stay consistent with how the rest of the firewall is managed.
 banaction = ufw
 
+# Push notification to your phone on every ban — set this to a unique,
+# hard-to-guess topic name (see scripts/hardening/README.md Phase 5) and
+# subscribe to it in the ntfy app. Set directly here (not read from .env)
+# since fail2ban runs as its own systemd service, outside this project's
+# environment.
+ntfy_topic = CHANGE_ME_SET_A_UNIQUE_TOPIC_NAME
+action = %(action_)s
+         ntfy[ntfy_topic="%(ntfy_topic)s"]
+
 # Escalating ban duration: 1h, then 1h*growth on repeat offenders within a
 # rolling window — a scripted attacker that keeps retrying from the same IP
 # gets locked out for longer each time instead of just waiting out a fixed ban.

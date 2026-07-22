@@ -2,69 +2,48 @@
 # Nginx image behavior for anything under /etc/nginx/templates/). Nginx's
 # own runtime variables ($host, $remote_addr, etc.) are untouched since
 # they aren't real environment variables.
+#
+# DEPLOYMENT MODES:
+#   LAN / HTTP-only (current):  Port 80 serves the app directly.
+#                               DOMAIN defaults to "_" (catch-all) when unset.
+#   Public HTTPS (future):      Set DOMAIN in .env, obtain certs via
+#                               scripts/init-letsencrypt.sh, then uncomment
+#                               the port 443 block below and change the port
+#                               80 block to redirect-only (see comment there).
 
-# ---- http-context directives (this whole file is `include`d inside the
-# base image's http{} block, so top-level statements here are valid there)
+# ---- http-context directives ------------------------------------------------
 
-# Hides the Nginx version from the Server header and default error pages —
-# small thing, but no reason to hand an attacker your exact patch level.
 server_tokens off;
 
 # Rate limiting, keyed by client IP:
-#  - auth_zone: 5 requests/minute for login & register specifically — a
-#    real user never needs more than a couple of attempts a minute; this
-#    slows down credential-stuffing/brute-force without needing anything
-#    fancier. burst=3 below allows a small cushion for double-clicks/retries.
-#  - general_zone: 60 requests/minute (1/sec) for everything else under
-#    /api/ — generous enough for normal dashboard/table usage, still a
-#    real ceiling against scripted abuse.
+#  - auth_zone: 5 req/min for login & register — slows credential stuffing
+#    without affecting normal use. burst=3 for double-clicks/retries.
+#  - general_zone: 60 req/min for all other /api/ calls.
 limit_req_zone $binary_remote_addr zone=auth_zone:10m rate=5r/m;
 limit_req_zone $binary_remote_addr zone=general_zone:10m rate=60r/m;
 limit_req_status 429;
 
-# Caps concurrent open connections per IP — a basic guard against a single
-# client (or small botnet) exhausting worker connections.
 limit_conn_zone $binary_remote_addr zone=conn_zone:10m;
 limit_conn_status 429;
 
-# ---- Port 80: ACME challenge + redirect everything else to HTTPS --------
+# ---- Port 80: serves the application (HTTP / LAN mode) ----------------------
+# For public HTTPS deployment, replace the body of this block with:
+#   location /.well-known/acme-challenge/ { root /var/www/certbot; }
+#   location / { return 301 https://$host$request_uri; }
+# and uncomment the port 443 server block below.
 server {
     listen 80;
     server_name ${DOMAIN};
 
+    # ACME challenge path — safe to keep even in HTTP mode; does nothing
+    # unless certbot is actively running a challenge.
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
     }
 
-    location / {
-        return 301 https://$host$request_uri;
-    }
-}
-
-# ---- Port 443: the actual application ------------------------------------
-server {
-    listen 443 ssl;
-    http2 on;
-    server_name ${DOMAIN};
-
-    ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
-
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305;
-    ssl_prefer_server_ciphers off;
-    ssl_session_cache shared:SSL:10m;
-    ssl_session_timeout 1d;
-    ssl_session_tickets off;
-
     include /etc/nginx/security-headers.conf;
 
-    # No file uploads anywhere in this app — a small cap makes oversized/
-    # malformed request-body abuse cheap to reject outright.
     client_max_body_size 1m;
-
-    # Slow-loris-style mitigations: don't hold worker connections open
-    # waiting on a client that's sending data (or nothing) too slowly.
     client_body_timeout 10s;
     client_header_timeout 10s;
     send_timeout 10s;
@@ -75,22 +54,22 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # Static assets: long cache + immutable (Vite content-hashes the filenames)
     location ~* \.(?:js|css|svg|png|jpg|jpeg|gif|ico|woff2?)$ {
         expires 30d;
         add_header Cache-Control "public, immutable";
-        # add_header does not inherit into a location that sets its own
-        # add_header (see security-headers.conf's own comment) — re-include
-        # explicitly so cached assets still carry the security headers.
+        # Re-include security headers: add_header does not inherit into a
+        # location block that sets its own add_header directives.
         include /etc/nginx/security-headers.conf;
         try_files $uri =404;
     }
 
+    # SPA fallback — React Router handles client-side routing
     location / {
         try_files $uri $uri/ /index.html;
     }
 
-    # Login and registration get the tight rate limit — these are exactly
-    # the endpoints a credential-stuffing / brute-force attempt would hit.
+    # Auth endpoints — tight rate limit (credential stuffing target)
     location = /api/auth/login {
         limit_req zone=auth_zone burst=3 nodelay;
         include /etc/nginx/proxy-common.conf;
@@ -101,8 +80,7 @@ server {
         include /etc/nginx/proxy-common.conf;
     }
 
-    # Everything else under /api/ (including refresh/logout, which happen
-    # more often legitimately) gets the more generous general limit.
+    # All other API traffic — generous limit, still a real ceiling
     location /api/ {
         limit_req zone=general_zone burst=20 nodelay;
         include /etc/nginx/proxy-common.conf;
@@ -122,3 +100,56 @@ server {
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
     gzip_min_length 1024;
 }
+
+# ---- Port 443: HTTPS (uncomment when Let's Encrypt certs are in place) ------
+# Prerequisites:
+#   1. Set DOMAIN=your-domain.duckdns.org in .env
+#   2. Run scripts/init-letsencrypt.sh to obtain the initial certificate
+#   3. Change the port 80 block above to redirect-only (see comment there)
+#   4. Uncomment the block below and redeploy
+#
+# server {
+#     listen 443 ssl;
+#     http2 on;
+#     server_name ${DOMAIN};
+#
+#     ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+#     ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+#
+#     ssl_protocols TLSv1.2 TLSv1.3;
+#     ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305;
+#     ssl_prefer_server_ciphers off;
+#     ssl_session_cache shared:SSL:10m;
+#     ssl_session_timeout 1d;
+#     ssl_session_tickets off;
+#
+#     include /etc/nginx/security-headers.conf;
+#     client_max_body_size 1m;
+#     client_body_timeout 10s;
+#     client_header_timeout 10s;
+#     send_timeout 10s;
+#     keepalive_timeout 15s;
+#     limit_conn conn_zone 30;
+#
+#     root /usr/share/nginx/html;
+#     index index.html;
+#
+#     location ~* \.(?:js|css|svg|png|jpg|jpeg|gif|ico|woff2?)$ {
+#         expires 30d;
+#         add_header Cache-Control "public, immutable";
+#         include /etc/nginx/security-headers.conf;
+#         try_files $uri =404;
+#     }
+#
+#     location / { try_files $uri $uri/ /index.html; }
+#
+#     location = /api/auth/login    { limit_req zone=auth_zone burst=3 nodelay; include /etc/nginx/proxy-common.conf; }
+#     location = /api/auth/register { limit_req zone=auth_zone burst=3 nodelay; include /etc/nginx/proxy-common.conf; }
+#     location /api/       { limit_req zone=general_zone burst=20 nodelay; include /etc/nginx/proxy-common.conf; }
+#     location /swagger-ui/ { limit_req zone=general_zone burst=20 nodelay; include /etc/nginx/proxy-common.conf; }
+#     location /api-docs    { limit_req zone=general_zone burst=20 nodelay; include /etc/nginx/proxy-common.conf; }
+#
+#     gzip on;
+#     gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+#     gzip_min_length 1024;
+# }

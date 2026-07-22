@@ -98,7 +98,7 @@ services:
     container_name: expense-tracker-frontend
     restart: unless-stopped
     environment:
-      DOMAIN: ${DOMAIN}
+      DOMAIN: ${DOMAIN:-_}
     depends_on:
       - backend
     ports:

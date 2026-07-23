@@ -12,6 +12,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import GroupRoundedIcon from '@mui/icons-material/GroupRounded';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/common/PageHeader';
 import { useAuth } from '../context/AuthContext';
@@ -19,7 +20,6 @@ import AuthService from '../services/authService';
 import { useNotification } from '../context/NotificationContext';
 
 const UPCOMING = [
-  'Multi-user support',
   'Budget planning',
   'Receipt image upload + OCR',
   'AI expense categorization',
@@ -133,6 +133,31 @@ export default function SettingsPage() {
             </Stack>
           </CardContent>
         </Card>
+
+        {/* User Management — visible to ADMIN only */}
+        {user?.role === 'ADMIN' && (
+          <Card>
+            <CardContent>
+              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+                <GroupRoundedIcon fontSize="small" color="primary" />
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  User Management
+                </Typography>
+              </Stack>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                Create accounts for others who share this instance, adjust roles, reset passwords,
+                or disable access.
+              </Typography>
+              <Chip
+                label="Manage users"
+                onClick={() => navigate('/admin/users')}
+                clickable
+                color="primary"
+                variant="outlined"
+              />
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardContent>

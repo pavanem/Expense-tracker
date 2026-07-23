@@ -71,6 +71,7 @@ public class SecurityConfig {
                                 "/api/auth/register", "/api/auth/login", "/api/auth/refresh",
                                 "/api/auth/registration-status")
                             .permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated();
                 } else {
                     auth.anyRequest().permitAll();

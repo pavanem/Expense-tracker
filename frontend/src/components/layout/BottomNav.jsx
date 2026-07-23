@@ -2,11 +2,15 @@ import { BottomNavigation, BottomNavigationAction, Paper } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import NavIcon from './NavIcon';
 import { NAV_ITEMS } from '../../utils/constants';
+import { useAuth } from '../../context/AuthContext';
 
 export default function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
-  const current = NAV_ITEMS.find((item) => item.path === location.pathname)?.path || false;
+  const { user } = useAuth();
+
+  const visibleItems = NAV_ITEMS.filter((item) => !item.adminOnly || user?.role === 'ADMIN');
+  const current = visibleItems.find((item) => item.path === location.pathname)?.path || false;
 
   return (
     <Paper
@@ -28,7 +32,7 @@ export default function BottomNav() {
         showLabels
         sx={{ height: 64 }}
       >
-        {NAV_ITEMS.map((item) => (
+        {visibleItems.map((item) => (
           <BottomNavigationAction
             key={item.path}
             label={item.label}

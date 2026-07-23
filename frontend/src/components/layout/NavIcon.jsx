@@ -3,12 +3,14 @@ import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded';
 import CategoryRoundedIcon from '@mui/icons-material/CategoryRounded';
 import AssessmentRoundedIcon from '@mui/icons-material/AssessmentRounded';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
+import GroupRoundedIcon from '@mui/icons-material/GroupRounded';
 
 const ICONS = {
   dashboard: DashboardRoundedIcon,
   receipt: ReceiptLongRoundedIcon,
   category: CategoryRoundedIcon,
   assessment: AssessmentRoundedIcon,
+  group: GroupRoundedIcon,
   settings: SettingsRoundedIcon,
 };
 

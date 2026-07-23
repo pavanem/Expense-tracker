@@ -5,6 +5,7 @@ import com.expensetracker.dto.ExpenseResponse;
 import com.expensetracker.dto.PageResponse;
 import com.expensetracker.entity.PaymentMode;
 import com.expensetracker.exception.InvalidRequestException;
+import com.expensetracker.security.AuthenticatedUser;
 import com.expensetracker.service.ExpenseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -35,26 +37,39 @@ public class ExpenseController {
 
     @PostMapping
     @Operation(summary = "Create a new expense")
-    public ResponseEntity<ExpenseResponse> create(@Valid @RequestBody ExpenseRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(expenseService.create(request));
+    public ResponseEntity<ExpenseResponse> create(
+            @Valid @RequestBody ExpenseRequest request,
+            @AuthenticationPrincipal AuthenticatedUser principal) {
+        Long userId = principal != null ? principal.userId() : null;
+        return ResponseEntity.status(HttpStatus.CREATED).body(expenseService.create(request, userId));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get an expense by id")
-    public ResponseEntity<ExpenseResponse> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(expenseService.findById(id));
+    public ResponseEntity<ExpenseResponse> findById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AuthenticatedUser principal) {
+        Long userId = principal != null ? principal.userId() : null;
+        return ResponseEntity.ok(expenseService.findById(id, userId));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an expense")
-    public ResponseEntity<ExpenseResponse> update(@PathVariable Long id, @Valid @RequestBody ExpenseRequest request) {
-        return ResponseEntity.ok(expenseService.update(id, request));
+    public ResponseEntity<ExpenseResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestBody ExpenseRequest request,
+            @AuthenticationPrincipal AuthenticatedUser principal) {
+        Long userId = principal != null ? principal.userId() : null;
+        return ResponseEntity.ok(expenseService.update(id, request, userId));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete an expense")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        expenseService.delete(id);
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AuthenticatedUser principal) {
+        Long userId = principal != null ? principal.userId() : null;
+        expenseService.delete(id, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -71,11 +86,13 @@ public class ExpenseController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "expenseDate") String sortBy,
-            @RequestParam(defaultValue = "DESC") Sort.Direction sortDir) {
+            @RequestParam(defaultValue = "DESC") Sort.Direction sortDir,
+            @AuthenticationPrincipal AuthenticatedUser principal) {
 
+        Long userId = principal != null ? principal.userId() : null;
         Pageable pageable = buildPageable(page, size, sortBy, sortDir);
         var criteria = new ExpenseService.ExpenseSearchCriteria(
-                null, categoryId, paymentMode, merchant, startDate, endDate, minAmount, maxAmount);
+                userId, null, categoryId, paymentMode, merchant, startDate, endDate, minAmount, maxAmount);
         return ResponseEntity.ok(expenseService.search(criteria, pageable));
     }
 
@@ -86,11 +103,13 @@ public class ExpenseController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "expenseDate") String sortBy,
-            @RequestParam(defaultValue = "DESC") Sort.Direction sortDir) {
+            @RequestParam(defaultValue = "DESC") Sort.Direction sortDir,
+            @AuthenticationPrincipal AuthenticatedUser principal) {
 
+        Long userId = principal != null ? principal.userId() : null;
         Pageable pageable = buildPageable(page, size, sortBy, sortDir);
         var criteria = new ExpenseService.ExpenseSearchCriteria(
-                keyword, null, null, null, null, null, null, null);
+                userId, keyword, null, null, null, null, null, null, null);
         return ResponseEntity.ok(expenseService.search(criteria, pageable));
     }
 

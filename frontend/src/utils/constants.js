@@ -16,5 +16,7 @@ export const NAV_ITEMS = [
   { label: 'Expenses', path: '/expenses', icon: 'receipt' },
   { label: 'Categories', path: '/categories', icon: 'category' },
   { label: 'Reports', path: '/reports', icon: 'assessment' },
+  { label: 'Users', path: '/admin/users', icon: 'group', adminOnly: true },
   { label: 'Settings', path: '/settings', icon: 'settings' },
 ];
+

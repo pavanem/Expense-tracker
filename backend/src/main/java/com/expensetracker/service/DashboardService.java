@@ -28,25 +28,26 @@ public class DashboardService {
     private final ExpenseRepository expenseRepository;
     private final ExpenseMapper expenseMapper;
 
-    public DashboardResponse getDashboard() {
+    public DashboardResponse getDashboard(Long userId) {
         LocalDate today = LocalDate.now();
         LocalDate monthStart = today.withDayOfMonth(1);
         LocalDate monthEnd = monthStart.plusMonths(1).minusDays(1);
         LocalDate yearStart = today.withDayOfYear(1);
         LocalDate yearEnd = yearStart.plusYears(1).minusDays(1);
 
-        BigDecimal todayTotal = expenseRepository.sumAmountByDate(today);
-        BigDecimal monthTotal = expenseRepository.sumAmountBetween(monthStart, monthEnd);
-        BigDecimal yearTotal = expenseRepository.sumAmountBetween(yearStart, yearEnd);
+        BigDecimal todayTotal = expenseRepository.sumAmountByDate(today, userId);
+        BigDecimal monthTotal = expenseRepository.sumAmountBetween(monthStart, monthEnd, userId);
+        BigDecimal yearTotal = expenseRepository.sumAmountBetween(yearStart, yearEnd, userId);
 
-        List<Expense> recent = expenseRepository.findRecent(PageRequest.of(0, RECENT_EXPENSES_LIMIT));
+        List<Expense> recent = expenseRepository.findRecent(
+                PageRequest.of(0, RECENT_EXPENSES_LIMIT), userId);
 
         List<com.expensetracker.dto.ExpenseResponse> recentExpenses = recent.stream()
                 .map(expenseMapper::toResponse)
                 .toList();
 
         List<DashboardResponse.CategoryTotal> topCategories = expenseRepository
-                .sumAmountByCategoryBetween(monthStart, monthEnd).stream()
+                .sumAmountByCategoryBetween(monthStart, monthEnd, userId).stream()
                 .limit(TOP_CATEGORIES_LIMIT)
                 .map(row -> DashboardResponse.CategoryTotal.builder()
                         .categoryId((Long) row[0])
@@ -58,7 +59,7 @@ public class DashboardService {
 
         LocalDate summaryStart = YearMonth.from(today).minusMonths(MONTHLY_SUMMARY_MONTHS - 1L).atDay(1);
         List<DashboardResponse.MonthlyPoint> monthlySummary = expenseRepository
-                .sumAmountByMonthBetween(summaryStart, monthEnd).stream()
+                .sumAmountByMonthBetween(summaryStart, monthEnd, userId).stream()
                 .map(row -> DashboardResponse.MonthlyPoint.builder()
                         .month(formatMonth(row[0]))
                         .total((BigDecimal) row[1])

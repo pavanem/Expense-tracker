@@ -80,9 +80,15 @@ public class SecurityConfig {
             .httpBasic(basic -> basic.disable())
             .formLogin(form -> form.disable());
 
-        if (securityEnabled) {
-            http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        }
+        // Always add the JWT filter — even when security enforcement is disabled.
+        // The filter only IDENTIFIES the caller (populates SecurityContext when a
+        // valid Bearer token is present); it never rejects requests on its own.
+        // This ensures per-user data isolation works correctly regardless of the
+        // SECURITY_ENABLED flag: if a user is logged in and sends their JWT,
+        // their userId is extracted and their data is scoped to them.
+        // Without this, SECURITY_ENABLED=false would make every logged-in user
+        // appear as "anonymous" (userId=null) and see everyone else's records.
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

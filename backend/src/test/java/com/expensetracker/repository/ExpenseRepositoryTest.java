@@ -57,20 +57,20 @@ class ExpenseRepositoryTest {
 
     @Test
     void sumAmountByDate_sumsOnlyThatDay() {
-        BigDecimal today = expenseRepository.sumAmountByDate(LocalDate.now());
+        BigDecimal today = expenseRepository.sumAmountByDate(LocalDate.now(), null);
         assertThat(today).isEqualByComparingTo("120.00");
     }
 
     @Test
     void sumAmountBetween_sumsInclusiveRange() {
-        BigDecimal total = expenseRepository.sumAmountBetween(LocalDate.now().minusDays(1), LocalDate.now());
+        BigDecimal total = expenseRepository.sumAmountBetween(LocalDate.now().minusDays(1), LocalDate.now(), null);
         assertThat(total).isEqualByComparingTo("2170.00");
     }
 
     @Test
     void sumAmountByCategoryBetween_groupsByCategoryDescending() {
         List<Object[]> rows = expenseRepository.sumAmountByCategoryBetween(
-                LocalDate.now().minusDays(1), LocalDate.now());
+                LocalDate.now().minusDays(1), LocalDate.now(), null);
 
         assertThat(rows).hasSize(2);
         assertThat(rows.get(0)[1]).isEqualTo("Travel"); // highest total first
@@ -79,9 +79,9 @@ class ExpenseRepositoryTest {
 
     @Test
     void countBetween_and_maxMin_amountBetween() {
-        long count = expenseRepository.countBetween(LocalDate.now().minusDays(1), LocalDate.now());
-        BigDecimal max = expenseRepository.maxAmountBetween(LocalDate.now().minusDays(1), LocalDate.now());
-        BigDecimal min = expenseRepository.minAmountBetween(LocalDate.now().minusDays(1), LocalDate.now());
+        long count = expenseRepository.countBetween(LocalDate.now().minusDays(1), LocalDate.now(), null);
+        BigDecimal max = expenseRepository.maxAmountBetween(LocalDate.now().minusDays(1), LocalDate.now(), null);
+        BigDecimal min = expenseRepository.minAmountBetween(LocalDate.now().minusDays(1), LocalDate.now(), null);
 
         assertThat(count).isEqualTo(3);
         assertThat(max).isEqualByComparingTo("1800.00");
@@ -100,7 +100,7 @@ class ExpenseRepositoryTest {
     @Test
     void findRecent_returnsMostRecentlyCreatedFirst() {
         Pageable top2 = PageRequest.of(0, 2);
-        List<Expense> recent = expenseRepository.findRecent(top2);
+        List<Expense> recent = expenseRepository.findRecent(top2, null);
 
         assertThat(recent).hasSize(2);
         // Most recently inserted (Airline) should come before earlier inserts.

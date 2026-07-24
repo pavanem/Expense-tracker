@@ -43,7 +43,7 @@ export default function Sidebar() {
         </Typography>
       </Box>
       <List sx={{ px: 1.5 }}>
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.filter((item) => !item.adminOnly || user?.role === 'ADMIN').map((item) => {
           const selected = location.pathname === item.path;
           return (
             <ListItemButton

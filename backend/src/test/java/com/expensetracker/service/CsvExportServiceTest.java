@@ -35,10 +35,10 @@ class CsvExportServiceTest {
 
     @Test
     void export_entireDatabase_usesFixedFilename() {
-        when(expenseRepository.findAll(any(Sort.class))).thenReturn(List.of());
+        when(expenseRepository.findAll(any(Specification.class), any(Sort.class))).thenReturn(List.of());
 
         CsvExportService service = new CsvExportService(expenseRepository, reportService);
-        CsvExportService.CsvExport export = service.export(ReportFilterRequest.builder().build(), true);
+        CsvExportService.CsvExport export = service.export(ReportFilterRequest.builder().build(), true, null);
 
         assertThat(export.filename()).isEqualTo("expenses_all.csv");
     }
@@ -49,7 +49,7 @@ class CsvExportServiceTest {
 
         CsvExportService service = new CsvExportService(expenseRepository, reportService);
         ReportFilterRequest filter = ReportFilterRequest.builder().month(7).year(2026).build();
-        CsvExportService.CsvExport export = service.export(filter, false);
+        CsvExportService.CsvExport export = service.export(filter, false, null);
 
         assertThat(export.filename()).isEqualTo("expenses_2026_07.csv");
     }
@@ -60,7 +60,7 @@ class CsvExportServiceTest {
 
         CsvExportService service = new CsvExportService(expenseRepository, reportService);
         ReportFilterRequest filter = ReportFilterRequest.builder().year(2026).build();
-        CsvExportService.CsvExport export = service.export(filter, false);
+        CsvExportService.CsvExport export = service.export(filter, false, null);
 
         assertThat(export.filename()).isEqualTo("expenses_2026.csv");
     }
@@ -74,7 +74,7 @@ class CsvExportServiceTest {
                 .startDate(LocalDate.of(2026, 7, 10))
                 .endDate(LocalDate.of(2026, 7, 20))
                 .build();
-        CsvExportService.CsvExport export = service.export(filter, false);
+        CsvExportService.CsvExport export = service.export(filter, false, null);
 
         assertThat(export.filename()).isEqualTo("expenses_2026_07_10_to_2026_07_20.csv");
     }
@@ -94,7 +94,7 @@ class CsvExportServiceTest {
 
         CsvExportService service = new CsvExportService(expenseRepository, reportService);
         ReportFilterRequest filter = ReportFilterRequest.builder().date(LocalDate.of(2026, 7, 10)).build();
-        CsvExportService.CsvExport export = service.export(filter, false);
+        CsvExportService.CsvExport export = service.export(filter, false, null);
 
         assertThat(export.content()).contains("Date,Category,Merchant,Description,Payment Mode,Amount");
         assertThat(export.content()).contains("2026-07-10,Food,Cafe,Lunch,UPI,199.99");

@@ -16,10 +16,12 @@ import CategoryRoundedIcon from '@mui/icons-material/CategoryRounded';
 import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import VisibilityOffRoundedIcon from '@mui/icons-material/VisibilityOffRounded';
+import TrendingUpRoundedIcon from '@mui/icons-material/TrendingUpRounded';
 import {
   Bar,
   BarChart,
   CartesianGrid,
+  Legend,
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
   XAxis,
@@ -35,8 +37,10 @@ import { useNotification } from '../context/NotificationContext';
 import { formatDate } from '../utils/format';
 import { paymentModeLabel } from '../utils/constants';
 import ExpenseFormDialog from '../components/expenses/ExpenseFormDialog';
+import IncomeFormDialog from '../components/income/IncomeFormDialog';
 import CategoryFormDialog from '../components/categories/CategoryFormDialog';
 import useCategories from '../hooks/useCategories';
+import useIncomeCategories from '../hooks/useIncomeCategories';
 import { tokens } from '../theme/theme';
 
 const HIDE_AMOUNTS_KEY = 'dashboard:hideAmounts';
@@ -45,17 +49,14 @@ export default function DashboardPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
+  const [incomeDialogOpen, setIncomeDialogOpen] = useState(false);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
-  // Privacy toggle: masks all figures on this page (today/month/year totals,
-  // recent expenses, category breakdown, and the trend chart) for anyone
-  // glancing at the screen. Persisted per-browser so it survives a refresh,
-  // and intentionally NOT synced to the server — it's a local display
-  // preference, not account data.
   const [hideAmounts, setHideAmounts] = useState(
     () => localStorage.getItem(HIDE_AMOUNTS_KEY) === 'true'
   );
   const { notifyError, notify } = useNotification();
   const { categories, reload: reloadCategories } = useCategories(true);
+  const { incomeCategories } = useIncomeCategories(true);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -99,13 +100,25 @@ export default function DashboardPage() {
     ...(data?.topSpendingCategories || []).map((c) => Number(c.total))
   );
 
+  // Combine monthly expense and income summaries for the chart
+  const monthsMap = new Map();
+  (data?.monthlyExpenseSummary || []).forEach((item) => {
+    monthsMap.set(item.month, { month: item.month, expenses: Number(item.total), income: 0 });
+  });
+  (data?.monthlyIncomeSummary || []).forEach((item) => {
+    const existing = monthsMap.get(item.month) || { month: item.month, expenses: 0, income: 0 };
+    existing.income = Number(item.total);
+    monthsMap.set(item.month, existing);
+  });
+  const chartData = Array.from(monthsMap.values()).sort((a, b) => a.month.localeCompare(b.month));
+
   return (
     <Box>
       <PageHeader
         title="Dashboard"
-        subtitle="Where your money went, at a glance."
+        subtitle="Your financial picture, expenses, and income at a glance."
         action={
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" gap={1}>
             <Tooltip title={hideAmounts ? 'Show amounts' : 'Hide amounts'}>
               <IconButton onClick={toggleHideAmounts} sx={{ border: '1px solid', borderColor: 'divider' }}>
                 {hideAmounts ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}
@@ -122,6 +135,14 @@ export default function DashboardPage() {
               Export CSV
             </Button>
             <Button
+              variant="outlined"
+              color="success"
+              startIcon={<TrendingUpRoundedIcon />}
+              onClick={() => setIncomeDialogOpen(true)}
+            >
+              Add income
+            </Button>
+            <Button
               variant="contained"
               startIcon={<AddRoundedIcon />}
               onClick={() => setExpenseDialogOpen(true)}
@@ -132,15 +153,21 @@ export default function DashboardPage() {
         }
       />
 
-      <Grid container spacing={2.5} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={4}>
-          <SummaryCard label="Today" value={data?.todayTotal} accent={tokens.color.amber} masked={hideAmounts} />
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={6} md={2.4}>
+          <SummaryCard label="Today expense" value={data?.todayTotal} accent={tokens.color.amber} masked={hideAmounts} />
         </Grid>
-        <Grid item xs={12} sm={4}>
-          <SummaryCard label="This month" value={data?.currentMonthTotal} accent={tokens.color.ink} masked={hideAmounts} />
+        <Grid item xs={12} sm={6} md={2.4}>
+          <SummaryCard label="Month expense" value={data?.currentMonthTotal} accent={tokens.color.ink} masked={hideAmounts} />
         </Grid>
-        <Grid item xs={12} sm={4}>
-          <SummaryCard label="This year" value={data?.currentYearTotal} accent={tokens.color.credit} masked={hideAmounts} />
+        <Grid item xs={12} sm={6} md={2.4}>
+          <SummaryCard label="Month income" value={data?.currentMonthIncome} accent="#10b981" masked={hideAmounts} />
+        </Grid>
+        <Grid item xs={12} sm={6} md={2.4}>
+          <SummaryCard label="Net savings" value={data?.currentMonthNet} accent={data?.currentMonthNet >= 0 ? '#10b981' : tokens.color.amber} masked={hideAmounts} />
+        </Grid>
+        <Grid item xs={12} sm={6} md={2.4}>
+          <SummaryCard label="This year expense" value={data?.currentYearTotal} accent={tokens.color.credit} masked={hideAmounts} />
         </Grid>
       </Grid>
 
@@ -170,7 +197,7 @@ export default function DashboardPage() {
                         {expense.merchant ? ` · ${expense.merchant}` : ''}
                       </Typography>
                     </Stack>
-                    <Amount value={expense.amount} size="body1" masked={hideAmounts} />
+                    <Amount value={expense.amount} size="body1" masked={false} />
                   </Stack>
                 ))}
               </Stack>
@@ -213,7 +240,7 @@ export default function DashboardPage() {
           <Card sx={{ mt: 2.5 }}>
             <CardContent>
               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                Last 6 months
+                Income vs Expenses (Last 6 months)
               </Typography>
               {hideAmounts ? (
                 <Box
@@ -231,14 +258,16 @@ export default function DashboardPage() {
                   </Stack>
                 </Box>
               ) : (
-                <Box sx={{ height: 200 }}>
+                <Box sx={{ height: 220 }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data?.monthlyExpenseSummary || []}>
+                    <BarChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={tokens.color.border} />
                       <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                       <YAxis tick={{ fontSize: 11 }} width={40} />
-                      <RechartsTooltip formatter={(value) => [`₹${value}`, 'Total']} />
-                      <Bar dataKey="total" fill={tokens.color.credit} radius={[4, 4, 0, 0]} />
+                      <RechartsTooltip formatter={(value, name) => [`₹${value}`, name === 'income' ? 'Income' : 'Expenses']} />
+                      <Legend />
+                      <Bar dataKey="income" name="Income" fill="#10b981" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="expenses" name="Expenses" fill={tokens.color.credit} radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </Box>
@@ -254,6 +283,13 @@ export default function DashboardPage() {
         onSaved={load}
         expense={null}
         categories={categories}
+      />
+      <IncomeFormDialog
+        open={incomeDialogOpen}
+        onClose={() => setIncomeDialogOpen(false)}
+        onSaved={load}
+        income={null}
+        incomeCategories={incomeCategories}
       />
       <CategoryFormDialog
         open={categoryDialogOpen}

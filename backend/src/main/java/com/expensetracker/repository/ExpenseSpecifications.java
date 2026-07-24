@@ -17,6 +17,14 @@ public final class ExpenseSpecifications {
     private ExpenseSpecifications() {
     }
 
+    /**
+     * Restricts results to expenses owned by the given user.
+     * Every query that touches expenses must include this spec.
+     */
+    public static Specification<Expense> userIdEquals(Long userId) {
+        return (root, query, cb) -> userId == null ? null : cb.equal(root.get("user").get("id"), userId);
+    }
+
     public static Specification<Expense> categoryIdEquals(Long categoryId) {
         return (root, query, cb) -> categoryId == null ? null : cb.equal(root.get("category").get("id"), categoryId);
     }
@@ -59,8 +67,7 @@ public final class ExpenseSpecifications {
 
     /**
      * Free-text search across category name, merchant, description, payment mode,
-     * and amount (as string). Date matching on free text is intentionally left to
-     * the dedicated date filters, since parsing arbitrary date text is ambiguous.
+     * and amount (as string).
      */
     public static Specification<Expense> keywordSearch(String keyword) {
         return (root, query, cb) -> {

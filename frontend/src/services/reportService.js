@@ -9,10 +9,14 @@ const ReportService = {
 
   range: (params) => apiClient.get('/reports/range', { params }).then((res) => res.data),
 
-  /**
-   * Downloads the CSV export and triggers a browser save, reading the
-   * filename the backend chose from the Content-Disposition header.
-   */
+  incomeDaily: (params) => apiClient.get('/reports/income/daily', { params }).then((res) => res.data),
+
+  incomeMonthly: (params) => apiClient.get('/reports/income/monthly', { params }).then((res) => res.data),
+
+  incomeYearly: (params) => apiClient.get('/reports/income/yearly', { params }).then((res) => res.data),
+
+  incomeRange: (params) => apiClient.get('/reports/income/range', { params }).then((res) => res.data),
+
   exportCsv: async (params) => {
     const response = await apiClient.get('/reports/export', {
       params,

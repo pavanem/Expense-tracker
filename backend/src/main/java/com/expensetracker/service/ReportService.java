@@ -24,13 +24,9 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
- * Resolves the SRS report filter options (specific date, date range, monthly,
- * yearly, category, payment mode, merchant) into a concrete [start, end]
- * window plus optional dimension filters, then computes every metric the
- * SRS asks reports to display.
- *
- * Precedence when multiple date-shaped filters are supplied: specific date >
- * explicit date range > month+year > year only > all-time.
+ * Resolves filter options into a concrete [start, end] window plus optional
+ * dimension filters, then computes every metric reports display.
+ * All results are scoped to the requesting user via userId.
  */
 @Service
 @RequiredArgsConstructor
@@ -39,11 +35,12 @@ public class ReportService {
 
     private final ExpenseRepository expenseRepository;
 
-    public ReportResponse generate(ReportFilterRequest filter) {
-        DateWindow window = resolveWindow(filter);
+    public ReportResponse generate(ReportFilterRequest filter, Long userId) {
+        DateWindow window = resolveWindow(filter, userId);
 
         Specification<Expense> spec = Specification
-                .where(ExpenseSpecifications.dateBetween(window.start(), window.end()))
+                .where(ExpenseSpecifications.userIdEquals(userId))
+                .and(ExpenseSpecifications.dateBetween(window.start(), window.end()))
                 .and(ExpenseSpecifications.categoryIdEquals(filter.getCategoryId()))
                 .and(ExpenseSpecifications.paymentModeEquals(filter.getPaymentMode()))
                 .and(ExpenseSpecifications.merchantContains(filter.getMerchant()));
@@ -115,8 +112,12 @@ public class ReportService {
                 .build();
     }
 
-    /** Resolves the raw filter into a concrete inclusive date window. Package-private for reuse by CsvExportService. */
-    DateWindow resolveWindow(ReportFilterRequest filter) {
+    /**
+     * Resolves the raw filter into a concrete inclusive date window.
+     * Package-private for reuse by CsvExportService.
+     * userId is needed for the all-time fallback path to scope the earliest-date query.
+     */
+    DateWindow resolveWindow(ReportFilterRequest filter, Long userId) {
         if (filter.getDate() != null) {
             return new DateWindow(filter.getDate(), filter.getDate());
         }
@@ -144,10 +145,8 @@ public class ReportService {
             LocalDate end = LocalDate.of(filter.getYear(), 12, 31);
             return new DateWindow(start, end);
         }
-        // No date filter supplied: default to earliest possible -> today (all-time).
-        LocalDate earliest = expenseRepository.findAll().stream()
-                .map(Expense::getExpenseDate)
-                .min(Comparator.naturalOrder())
+        // All-time fallback — scoped to this user's earliest expense date.
+        LocalDate earliest = expenseRepository.findEarliestDateByUser(userId)
                 .orElse(LocalDate.now());
         return new DateWindow(earliest, LocalDate.now());
     }

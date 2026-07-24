@@ -20,6 +20,10 @@ public class DashboardResponse {
     private List<CategoryTotal> topSpendingCategories;
     private List<MonthlyPoint> monthlyExpenseSummary;
 
+    private BigDecimal currentMonthIncome;
+    private BigDecimal currentMonthNet;
+    private List<MonthlyPoint> monthlyIncomeSummary;
+
     @Getter
     @Builder
     @NoArgsConstructor

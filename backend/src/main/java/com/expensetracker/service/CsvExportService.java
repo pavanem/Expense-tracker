@@ -20,9 +20,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * Builds CSV exports per the SRS: single day, date range, monthly, yearly,
- * category, or the entire database. Filename derivation mirrors the SRS
- * examples (expenses_2026_07.csv, expenses_2026.csv, etc.).
+ * Builds CSV exports scoped to the requesting user.
+ * "Entire database" mode exports all of the user's own expenses, not other users' data.
  */
 @Service
 @RequiredArgsConstructor
@@ -36,17 +35,20 @@ public class CsvExportService {
     private final ExpenseRepository expenseRepository;
     private final ReportService reportService;
 
-    public CsvExport export(ReportFilterRequest filter, boolean entireDatabase) {
+    public CsvExport export(ReportFilterRequest filter, boolean entireDatabase, Long userId) {
         List<Expense> expenses;
         String filename;
 
         if (entireDatabase) {
-            expenses = expenseRepository.findAll(Sort.by(Sort.Direction.ASC, "expenseDate"));
+            // "All" means all of THIS user's expenses, not every user's data.
+            Specification<Expense> spec = Specification.where(ExpenseSpecifications.userIdEquals(userId));
+            expenses = expenseRepository.findAll(spec, Sort.by(Sort.Direction.ASC, "expenseDate"));
             filename = "expenses_all.csv";
         } else {
-            ReportService.DateWindow window = reportService.resolveWindow(filter);
+            ReportService.DateWindow window = reportService.resolveWindow(filter, userId);
             Specification<Expense> spec = Specification
-                    .where(ExpenseSpecifications.dateBetween(window.start(), window.end()))
+                    .where(ExpenseSpecifications.userIdEquals(userId))
+                    .and(ExpenseSpecifications.dateBetween(window.start(), window.end()))
                     .and(ExpenseSpecifications.categoryIdEquals(filter.getCategoryId()))
                     .and(ExpenseSpecifications.paymentModeEquals(filter.getPaymentMode()))
                     .and(ExpenseSpecifications.merchantContains(filter.getMerchant()));
@@ -55,7 +57,7 @@ public class CsvExportService {
         }
 
         String csv = toCsv(expenses);
-        log.info("Exported {} expenses to CSV file '{}'", expenses.size(), filename);
+        log.info("Exported {} expenses to CSV '{}' for userId={}", expenses.size(), filename, userId);
         return new CsvExport(filename, csv);
     }
 
@@ -69,10 +71,6 @@ public class CsvExportService {
         }
         if (filter.getYear() != null && filter.getStartDate() == null && filter.getEndDate() == null) {
             return "expenses_" + filter.getYear() + ".csv";
-        }
-        if (filter.getStartDate() != null && filter.getEndDate() != null) {
-            return "expenses_" + window.start().format(CSV_DATE_FORMAT).replace("-", "_")
-                    + "_to_" + window.end().format(CSV_DATE_FORMAT).replace("-", "_") + ".csv";
         }
         return "expenses_" + window.start().format(CSV_DATE_FORMAT).replace("-", "_")
                 + "_to_" + window.end().format(CSV_DATE_FORMAT).replace("-", "_") + ".csv";
@@ -92,7 +90,6 @@ public class CsvExportService {
                 );
             }
         } catch (IOException e) {
-            // StringWriter never throws IOException in practice; wrap for safety.
             throw new IllegalStateException("Failed to generate CSV export", e);
         }
         return writer.toString();

@@ -6,6 +6,7 @@ import com.expensetracker.entity.Expense;
 import com.expensetracker.entity.PaymentMode;
 import com.expensetracker.mapper.ExpenseMapper;
 import com.expensetracker.repository.ExpenseRepository;
+import com.expensetracker.repository.IncomeRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -25,6 +26,7 @@ import static org.mockito.Mockito.when;
 class DashboardServiceTest {
 
     @Mock private ExpenseRepository expenseRepository;
+    @Mock private IncomeRepository incomeRepository;
     @Mock private ExpenseMapper expenseMapper;
 
     private DashboardService dashboardService;
@@ -33,33 +35,37 @@ class DashboardServiceTest {
 
     @Test
     void getDashboard_assemblesAllSectionsFromRepositoryAggregates() {
-        dashboardService = new DashboardService(expenseRepository, expenseMapper);
+        dashboardService = new DashboardService(expenseRepository, incomeRepository, expenseMapper);
 
-        when(expenseRepository.sumAmountByDate(any(LocalDate.class))).thenReturn(new BigDecimal("120.00"));
-        when(expenseRepository.sumAmountBetween(any(LocalDate.class), any(LocalDate.class)))
+        when(expenseRepository.sumAmountByDate(any(LocalDate.class), any())).thenReturn(new BigDecimal("120.00"));
+        when(expenseRepository.sumAmountBetween(any(LocalDate.class), any(LocalDate.class), any()))
                 .thenReturn(new BigDecimal("2500.00"));
+        when(incomeRepository.sumAmountBetween(any(LocalDate.class), any(LocalDate.class), any()))
+                .thenReturn(new BigDecimal("5000.00"));
 
         Expense recentExpense = Expense.builder().id(1L).category(food).amount(new BigDecimal("120.00"))
                 .paymentMode(PaymentMode.UPI).expenseDate(LocalDate.now()).build();
-        when(expenseRepository.findRecent(any(Pageable.class))).thenReturn(List.of(recentExpense));
+        when(expenseRepository.findRecent(any(Pageable.class), any())).thenReturn(List.of(recentExpense));
         when(expenseMapper.toResponse(recentExpense)).thenReturn(
                 com.expensetracker.dto.ExpenseResponse.builder().id(1L).amount(new BigDecimal("120.00")).build());
 
-        // Object[] shape matches ExpenseRepository#sumAmountByCategoryBetween: [id, name, color, total]
         Object[] categoryRow = new Object[]{1L, "Food", "#FF7043", new BigDecimal("2500.00")};
-        when(expenseRepository.sumAmountByCategoryBetween(any(LocalDate.class), any(LocalDate.class)))
+        when(expenseRepository.sumAmountByCategoryBetween(any(LocalDate.class), any(LocalDate.class), any()))
                 .thenReturn(List.<Object[]>of(categoryRow));
 
-        // Object[] shape matches #sumAmountByMonthBetween: [truncated-date, total]
         Object[] monthRow = new Object[]{Date.valueOf(LocalDate.now().withDayOfMonth(1)), new BigDecimal("2500.00")};
-        when(expenseRepository.sumAmountByMonthBetween(any(LocalDate.class), any(LocalDate.class)))
+        when(expenseRepository.sumAmountByMonthBetween(any(LocalDate.class), any(LocalDate.class), any()))
                 .thenReturn(List.<Object[]>of(monthRow));
+        when(incomeRepository.sumAmountByMonthBetween(any(LocalDate.class), any(LocalDate.class), any()))
+                .thenReturn(List.of());
 
-        DashboardResponse dashboard = dashboardService.getDashboard();
+        DashboardResponse dashboard = dashboardService.getDashboard(null);
 
         assertThat(dashboard.getTodayTotal()).isEqualByComparingTo("120.00");
         assertThat(dashboard.getCurrentMonthTotal()).isEqualByComparingTo("2500.00");
         assertThat(dashboard.getCurrentYearTotal()).isEqualByComparingTo("2500.00");
+        assertThat(dashboard.getCurrentMonthIncome()).isEqualByComparingTo("5000.00");
+        assertThat(dashboard.getCurrentMonthNet()).isEqualByComparingTo("2500.00");
         assertThat(dashboard.getRecentExpenses()).hasSize(1);
         assertThat(dashboard.getTopSpendingCategories()).hasSize(1);
         assertThat(dashboard.getTopSpendingCategories().get(0).getCategoryName()).isEqualTo("Food");
@@ -69,12 +75,14 @@ class DashboardServiceTest {
 
     @Test
     void getDashboard_topCategoriesLimitedToFive() {
-        dashboardService = new DashboardService(expenseRepository, expenseMapper);
+        dashboardService = new DashboardService(expenseRepository, incomeRepository, expenseMapper);
 
-        when(expenseRepository.sumAmountByDate(any(LocalDate.class))).thenReturn(BigDecimal.ZERO);
-        when(expenseRepository.sumAmountBetween(any(LocalDate.class), any(LocalDate.class))).thenReturn(BigDecimal.ZERO);
-        when(expenseRepository.findRecent(any(Pageable.class))).thenReturn(List.of());
-        when(expenseRepository.sumAmountByMonthBetween(any(LocalDate.class), any(LocalDate.class))).thenReturn(List.of());
+        when(expenseRepository.sumAmountByDate(any(LocalDate.class), any())).thenReturn(BigDecimal.ZERO);
+        when(expenseRepository.sumAmountBetween(any(LocalDate.class), any(LocalDate.class), any())).thenReturn(BigDecimal.ZERO);
+        when(incomeRepository.sumAmountBetween(any(LocalDate.class), any(LocalDate.class), any())).thenReturn(BigDecimal.ZERO);
+        when(expenseRepository.findRecent(any(Pageable.class), any())).thenReturn(List.of());
+        when(expenseRepository.sumAmountByMonthBetween(any(LocalDate.class), any(LocalDate.class), any())).thenReturn(List.of());
+        when(incomeRepository.sumAmountByMonthBetween(any(LocalDate.class), any(LocalDate.class), any())).thenReturn(List.of());
 
         List<Object[]> sevenCategories = List.of(
                 new Object[]{1L, "A", "#111", new BigDecimal("700")},
@@ -85,10 +93,10 @@ class DashboardServiceTest {
                 new Object[]{6L, "F", "#666", new BigDecimal("200")},
                 new Object[]{7L, "G", "#777", new BigDecimal("100")}
         );
-        when(expenseRepository.sumAmountByCategoryBetween(any(LocalDate.class), any(LocalDate.class)))
+        when(expenseRepository.sumAmountByCategoryBetween(any(LocalDate.class), any(LocalDate.class), any()))
                 .thenReturn(sevenCategories);
 
-        DashboardResponse dashboard = dashboardService.getDashboard();
+        DashboardResponse dashboard = dashboardService.getDashboard(null);
 
         assertThat(dashboard.getTopSpendingCategories()).hasSize(5);
     }

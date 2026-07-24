@@ -14,7 +14,7 @@ export default function BottomNav() {
 
   return (
     <Paper
-      elevation={0}
+      elevation={4}
       sx={{
         display: { xs: 'block', md: 'none' },
         position: 'fixed',
@@ -24,21 +24,46 @@ export default function BottomNav() {
         zIndex: (theme) => theme.zIndex.appBar,
         borderTop: (theme) => `1px solid ${theme.palette.divider}`,
         pb: 'env(safe-area-inset-bottom)',
+        bgcolor: 'background.paper',
       }}
     >
       <BottomNavigation
         value={current}
         onChange={(_e, newValue) => navigate(newValue)}
         showLabels
-        sx={{ height: 64 }}
+        sx={{
+          height: 60,
+          display: 'flex',
+          justifyContent: 'flex-start',
+          overflowX: 'auto',
+          scrollBehavior: 'smooth',
+          '&::-webkit-scrollbar': { display: 'none' },
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none',
+        }}
       >
         {visibleItems.map((item) => (
           <BottomNavigationAction
             key={item.path}
-            label={item.label}
+            label={item.shortLabel || item.label}
             value={item.path}
             icon={<NavIcon name={item.icon} fontSize="small" />}
-            sx={{ minWidth: 0, fontSize: 11 }}
+            sx={{
+              minWidth: 70,
+              flexShrink: 0,
+              px: 0.75,
+              py: 0.75,
+              '& .MuiBottomNavigationAction-label': {
+                fontSize: 10,
+                whiteSpace: 'nowrap',
+                mt: 0.25,
+                lineHeight: 1.2,
+                '&.Mui-selected': {
+                  fontSize: 10,
+                  fontWeight: 700,
+                },
+              },
+            }}
           />
         ))}
       </BottomNavigation>

@@ -6,6 +6,7 @@ import com.expensetracker.dto.PageResponse;
 import com.expensetracker.entity.IncomeCategory;
 import com.expensetracker.entity.Income;
 import com.expensetracker.entity.User;
+import com.expensetracker.exception.InvalidRequestException;
 import com.expensetracker.exception.ResourceNotFoundException;
 import com.expensetracker.mapper.IncomeMapper;
 import com.expensetracker.repository.IncomeCategoryRepository;
@@ -77,6 +78,10 @@ public class IncomeService {
     }
 
     private void applyRequest(Income income, IncomeRequest request, Long userId) {
+        if (request.getIncomeDate() != null && request.getIncomeDate().isAfter(LocalDate.now().plusMonths(2))) {
+            throw new InvalidRequestException("Income date cannot be more than 2 months in the future");
+        }
+
         IncomeCategory category = incomeCategoryRepository.findById(request.getIncomeCategoryId())
                 .orElseThrow(() -> ResourceNotFoundException.forEntity("IncomeCategory", request.getIncomeCategoryId()));
 

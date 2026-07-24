@@ -28,6 +28,5 @@ public class IncomeRequest {
     private String description;
 
     @NotNull(message = "Income date is mandatory")
-    @PastOrPresent(message = "Income date cannot be in the future")
     private LocalDate incomeDate;
 }

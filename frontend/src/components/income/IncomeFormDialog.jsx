@@ -13,7 +13,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import IncomeService from '../../services/incomeService';
 import { useNotification } from '../../context/NotificationContext';
 import { toIsoDate, todayIso } from '../../utils/format';
-import { parseISO } from 'date-fns';
+import { addMonths, parseISO } from 'date-fns';
 
 const emptyForm = {
   amount: '',
@@ -29,6 +29,8 @@ export default function IncomeFormDialog({ open, onClose, onSaved, income, incom
   const [saving, setSaving] = useState(false);
   const { notify, notifyError } = useNotification();
   const isEdit = Boolean(income);
+
+  const maxAllowedDate = addMonths(new Date(), 2);
 
   useEffect(() => {
     if (open) {
@@ -126,7 +128,7 @@ export default function IncomeFormDialog({ open, onClose, onSaved, income, incom
             label="Income date"
             value={form.incomeDate ? parseISO(form.incomeDate) : null}
             onChange={(date) => setForm((prev) => ({ ...prev, incomeDate: toIsoDate(date) }))}
-            maxDate={new Date()}
+            maxDate={maxAllowedDate}
             slotProps={{
               textField: { fullWidth: true, error: Boolean(errors.incomeDate), helperText: errors.incomeDate },
             }}

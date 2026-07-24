@@ -4,6 +4,7 @@ import com.expensetracker.dto.DashboardResponse;
 import com.expensetracker.entity.Expense;
 import com.expensetracker.mapper.ExpenseMapper;
 import com.expensetracker.repository.ExpenseRepository;
+import com.expensetracker.repository.IncomeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class DashboardService {
     private static final DateTimeFormatter MONTH_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM");
 
     private final ExpenseRepository expenseRepository;
+    private final IncomeRepository incomeRepository;
     private final ExpenseMapper expenseMapper;
 
     public DashboardResponse getDashboard(Long userId) {
@@ -38,6 +40,9 @@ public class DashboardService {
         BigDecimal todayTotal = expenseRepository.sumAmountByDate(today, userId);
         BigDecimal monthTotal = expenseRepository.sumAmountBetween(monthStart, monthEnd, userId);
         BigDecimal yearTotal = expenseRepository.sumAmountBetween(yearStart, yearEnd, userId);
+
+        BigDecimal monthIncome = incomeRepository.sumAmountBetween(monthStart, monthEnd, userId);
+        BigDecimal monthNet = monthIncome.subtract(monthTotal);
 
         List<Expense> recent = expenseRepository.findRecent(
                 PageRequest.of(0, RECENT_EXPENSES_LIMIT), userId);
@@ -66,13 +71,24 @@ public class DashboardService {
                         .build())
                 .toList();
 
+        List<DashboardResponse.MonthlyPoint> monthlyIncomeSummary = incomeRepository
+                .sumAmountByMonthBetween(summaryStart, monthEnd, userId).stream()
+                .map(row -> DashboardResponse.MonthlyPoint.builder()
+                        .month(formatMonth(row[0]))
+                        .total((BigDecimal) row[1])
+                        .build())
+                .toList();
+
         return DashboardResponse.builder()
                 .todayTotal(todayTotal)
                 .currentMonthTotal(monthTotal)
                 .currentYearTotal(yearTotal)
+                .currentMonthIncome(monthIncome)
+                .currentMonthNet(monthNet)
                 .recentExpenses(recentExpenses)
                 .topSpendingCategories(topCategories)
                 .monthlyExpenseSummary(monthlySummary)
+                .monthlyIncomeSummary(monthlyIncomeSummary)
                 .build();
     }
 

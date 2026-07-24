@@ -174,10 +174,12 @@ export default function SettingsPage() {
               Categories
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-              Manage the categories used across expenses, including activating or deactivating ones you no
-              longer use.
+              Manage expense and income categories, including activating or deactivating ones you no longer use.
             </Typography>
-            <Chip label="Manage categories" onClick={() => navigate('/categories')} clickable color="primary" variant="outlined" />
+            <Stack direction="row" spacing={1}>
+              <Chip label="Expense categories" onClick={() => navigate('/categories')} clickable color="primary" variant="outlined" />
+              <Chip label="Income categories" onClick={() => navigate('/income-categories')} clickable color="primary" variant="outlined" />
+            </Stack>
           </CardContent>
         </Card>
 

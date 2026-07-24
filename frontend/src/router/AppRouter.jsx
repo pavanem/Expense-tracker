@@ -4,7 +4,9 @@ import ProtectedRoute from '../components/auth/ProtectedRoute';
 import LoginPage from '../pages/LoginPage';
 import DashboardPage from '../pages/DashboardPage';
 import ExpensesPage from '../pages/ExpensesPage';
+import IncomePage from '../pages/IncomePage';
 import CategoriesPage from '../pages/CategoriesPage';
+import IncomeCategoriesPage from '../pages/IncomeCategoriesPage';
 import ReportsPage from '../pages/ReportsPage';
 import SettingsPage from '../pages/SettingsPage';
 import UserManagementPage from '../pages/UserManagementPage';
@@ -27,7 +29,9 @@ export default function AppRouter() {
           <Route element={<AppLayout />}>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/expenses" element={<ExpensesPage />} />
+            <Route path="/income" element={<IncomePage />} />
             <Route path="/categories" element={<CategoriesPage />} />
+            <Route path="/income-categories" element={<IncomeCategoriesPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<NotFoundPage />} />

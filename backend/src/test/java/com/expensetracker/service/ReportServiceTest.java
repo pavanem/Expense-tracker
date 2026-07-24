@@ -43,7 +43,7 @@ class ReportServiceTest {
                 .endDate(LocalDate.of(2026, 12, 31))
                 .build();
 
-        ReportService.DateWindow window = reportService.resolveWindow(filter);
+        ReportService.DateWindow window = reportService.resolveWindow(filter, null);
 
         assertThat(window.start()).isEqualTo(LocalDate.of(2026, 7, 10));
         assertThat(window.end()).isEqualTo(LocalDate.of(2026, 7, 10));
@@ -53,7 +53,7 @@ class ReportServiceTest {
     void resolveWindow_dateRange_requiresBothBounds() {
         ReportFilterRequest filter = ReportFilterRequest.builder().startDate(LocalDate.now()).build();
 
-        assertThatThrownBy(() -> reportService.resolveWindow(filter))
+        assertThatThrownBy(() -> reportService.resolveWindow(filter, null))
                 .isInstanceOf(InvalidRequestException.class);
     }
 
@@ -64,7 +64,7 @@ class ReportServiceTest {
                 .endDate(LocalDate.of(2026, 7, 10))
                 .build();
 
-        assertThatThrownBy(() -> reportService.resolveWindow(filter))
+        assertThatThrownBy(() -> reportService.resolveWindow(filter, null))
                 .isInstanceOf(InvalidRequestException.class);
     }
 
@@ -72,7 +72,7 @@ class ReportServiceTest {
     void resolveWindow_monthAndYear_resolvesToCalendarMonth() {
         ReportFilterRequest filter = ReportFilterRequest.builder().month(2).year(2024).build(); // leap year
 
-        ReportService.DateWindow window = reportService.resolveWindow(filter);
+        ReportService.DateWindow window = reportService.resolveWindow(filter, null);
 
         assertThat(window.start()).isEqualTo(LocalDate.of(2024, 2, 1));
         assertThat(window.end()).isEqualTo(LocalDate.of(2024, 2, 29));
@@ -82,7 +82,7 @@ class ReportServiceTest {
     void resolveWindow_yearOnly_resolvesToFullYear() {
         ReportFilterRequest filter = ReportFilterRequest.builder().year(2025).build();
 
-        ReportService.DateWindow window = reportService.resolveWindow(filter);
+        ReportService.DateWindow window = reportService.resolveWindow(filter, null);
 
         assertThat(window.start()).isEqualTo(LocalDate.of(2025, 1, 1));
         assertThat(window.end()).isEqualTo(LocalDate.of(2025, 12, 31));
@@ -101,7 +101,7 @@ class ReportServiceTest {
         when(expenseRepository.findAll(any(Specification.class))).thenReturn(List.of(e1, e2));
 
         ReportFilterRequest filter = ReportFilterRequest.builder().startDate(day1).endDate(day2).build();
-        ReportResponse report = reportService.generate(filter);
+        ReportResponse report = reportService.generate(filter, null);
 
         assertThat(report.getTotalExpenses()).isEqualByComparingTo("400.00");
         assertThat(report.getNumberOfTransactions()).isEqualTo(2);
@@ -119,7 +119,7 @@ class ReportServiceTest {
 
         ReportFilterRequest filter = ReportFilterRequest.builder()
                 .startDate(LocalDate.of(2026, 1, 1)).endDate(LocalDate.of(2026, 1, 31)).build();
-        ReportResponse report = reportService.generate(filter);
+        ReportResponse report = reportService.generate(filter, null);
 
         assertThat(report.getTotalExpenses()).isEqualByComparingTo("0");
         assertThat(report.getNumberOfTransactions()).isZero();

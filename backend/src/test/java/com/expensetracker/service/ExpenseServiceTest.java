@@ -9,6 +9,7 @@ import com.expensetracker.exception.ResourceNotFoundException;
 import com.expensetracker.mapper.ExpenseMapper;
 import com.expensetracker.repository.CategoryRepository;
 import com.expensetracker.repository.ExpenseRepository;
+import com.expensetracker.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +37,7 @@ class ExpenseServiceTest {
 
     @Mock private ExpenseRepository expenseRepository;
     @Mock private CategoryRepository categoryRepository;
+    @Mock private UserRepository userRepository;
     @Mock private ExpenseMapper expenseMapper;
 
     @InjectMocks
@@ -63,7 +65,7 @@ class ExpenseServiceTest {
         when(expenseMapper.toResponse(any(Expense.class))).thenReturn(
                 ExpenseResponse.builder().id(1L).amount(new BigDecimal("100.00")).build());
 
-        ExpenseResponse response = expenseService.create(request);
+        ExpenseResponse response = expenseService.create(request, null);
 
         assertThat(response.getAmount()).isEqualByComparingTo("100.00");
         verify(expenseRepository).save(argThat(e -> e.getCategory().equals(category)));
@@ -73,7 +75,7 @@ class ExpenseServiceTest {
     void create_throwsNotFound_whenCategoryDoesNotExist() {
         when(categoryRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> expenseService.create(request))
+        assertThatThrownBy(() -> expenseService.create(request, null))
                 .isInstanceOf(ResourceNotFoundException.class);
 
         verify(expenseRepository, never()).save(any());
@@ -83,7 +85,7 @@ class ExpenseServiceTest {
     void findById_throwsNotFound_whenMissing() {
         when(expenseRepository.findById(42L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> expenseService.findById(42L))
+        assertThatThrownBy(() -> expenseService.findById(42L, null))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -96,7 +98,7 @@ class ExpenseServiceTest {
         when(expenseMapper.toResponse(existing)).thenReturn(
                 ExpenseResponse.builder().id(5L).amount(new BigDecimal("100.00")).build());
 
-        ExpenseResponse response = expenseService.update(5L, request);
+        ExpenseResponse response = expenseService.update(5L, request, null);
 
         assertThat(response.getAmount()).isEqualByComparingTo("100.00");
         assertThat(existing.getMerchant()).isEqualTo("Cafe");
@@ -107,7 +109,7 @@ class ExpenseServiceTest {
         Expense existing = Expense.builder().id(7L).build();
         when(expenseRepository.findById(7L)).thenReturn(Optional.of(existing));
 
-        expenseService.delete(7L);
+        expenseService.delete(7L, null);
 
         verify(expenseRepository).delete(existing);
     }
@@ -122,7 +124,7 @@ class ExpenseServiceTest {
         when(expenseMapper.toResponse(entity)).thenReturn(ExpenseResponse.builder().id(1L).build());
 
         var criteria = new ExpenseService.ExpenseSearchCriteria(
-                null, 1L, PaymentMode.UPI, null, null, null, null, null);
+                null, null, 1L, PaymentMode.UPI, null, null, null, null, null);
 
         var result = expenseService.search(criteria, pageable);
 

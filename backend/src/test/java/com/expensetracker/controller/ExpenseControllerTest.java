@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -45,7 +46,7 @@ class ExpenseControllerTest {
     @Test
     void create_returns201_withValidPayload() throws Exception {
         ExpenseResponse response = ExpenseResponse.builder().id(1L).amount(new BigDecimal("100.00")).build();
-        when(expenseService.create(any(ExpenseRequest.class))).thenReturn(response);
+        when(expenseService.create(any(ExpenseRequest.class), any())).thenReturn(response);
 
         mockMvc.perform(post("/api/expenses")
                         .contentType("application/json")
@@ -88,7 +89,7 @@ class ExpenseControllerTest {
 
     @Test
     void findById_returns404_whenMissing() throws Exception {
-        when(expenseService.findById(99L)).thenThrow(ResourceNotFoundException.forEntity("Expense", 99L));
+        when(expenseService.findById(eq(99L), any())).thenThrow(ResourceNotFoundException.forEntity("Expense", 99L));
 
         mockMvc.perform(get("/api/expenses/99"))
                 .andExpect(status().isNotFound());

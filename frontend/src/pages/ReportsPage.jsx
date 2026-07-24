@@ -22,10 +22,16 @@ import CategoryChip from '../components/common/CategoryChip';
 import Amount from '../components/common/Amount';
 import ReportService from '../services/reportService';
 import useCategories from '../hooks/useCategories';
+import useIncomeCategories from '../hooks/useIncomeCategories';
 import { useNotification } from '../context/NotificationContext';
 import { PAYMENT_MODES } from '../utils/constants';
 import { todayIso } from '../utils/format';
 import { tokens } from '../theme/theme';
+
+const REPORT_SUBJECTS = [
+  { value: 'expenses', label: 'Expenses' },
+  { value: 'income', label: 'Income' },
+];
 
 const REPORT_TYPES = [
   { value: 'daily', label: 'Day' },
@@ -38,8 +44,10 @@ const currentYear = new Date().getFullYear();
 
 export default function ReportsPage() {
   const { categories } = useCategories(true);
+  const { incomeCategories } = useIncomeCategories(true);
   const { notify, notifyError } = useNotification();
 
+  const [subject, setSubject] = useState('expenses');
   const [reportType, setReportType] = useState('monthly');
   const [date, setDate] = useState(todayIso());
   const [month, setMonth] = useState(new Date().getMonth() + 1);
@@ -55,7 +63,7 @@ export default function ReportsPage() {
 
   const commonFilters = () => ({
     categoryId: categoryId || undefined,
-    paymentMode: paymentMode || undefined,
+    paymentMode: subject === 'expenses' ? (paymentMode || undefined) : undefined,
     merchant: merchant || undefined,
   });
 
@@ -63,14 +71,23 @@ export default function ReportsPage() {
     setLoading(true);
     try {
       let data;
+      const isIncome = subject === 'income';
       if (reportType === 'daily') {
-        data = await ReportService.daily({ date, ...commonFilters() });
+        data = isIncome
+          ? await ReportService.incomeDaily({ date, ...commonFilters() })
+          : await ReportService.daily({ date, ...commonFilters() });
       } else if (reportType === 'monthly') {
-        data = await ReportService.monthly({ month, year, ...commonFilters() });
+        data = isIncome
+          ? await ReportService.incomeMonthly({ month, year, ...commonFilters() })
+          : await ReportService.monthly({ month, year, ...commonFilters() });
       } else if (reportType === 'yearly') {
-        data = await ReportService.yearly({ year, ...commonFilters() });
+        data = isIncome
+          ? await ReportService.incomeYearly({ year, ...commonFilters() })
+          : await ReportService.yearly({ year, ...commonFilters() });
       } else {
-        data = await ReportService.range({ startDate, endDate, ...commonFilters() });
+        data = isIncome
+          ? await ReportService.incomeRange({ startDate, endDate, ...commonFilters() })
+          : await ReportService.range({ startDate, endDate, ...commonFilters() });
       }
       setReport(data);
     } catch (err) {
@@ -115,11 +132,13 @@ export default function ReportsPage() {
         ? report.monthlyBreakdown.map((p) => ({ label: p.month, total: p.total }))
         : (report?.yearlyBreakdown || []).map((p) => ({ label: String(p.year), total: p.total }));
 
+  const activeCategories = subject === 'income' ? incomeCategories : categories;
+
   return (
     <Box>
       <PageHeader
         title="Reports"
-        subtitle="Break down spending by day, month, year, category, payment mode, or merchant."
+        subtitle="Break down spending and income by day, month, year, category, or range."
         action={
           <Button variant="outlined" startIcon={<FileDownloadRoundedIcon />} onClick={exportAll}>
             Export entire database
@@ -130,18 +149,40 @@ export default function ReportsPage() {
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Stack spacing={2.5}>
-            <ToggleButtonGroup
-              value={reportType}
-              exclusive
-              onChange={(_e, val) => val && setReportType(val)}
-              size="small"
-            >
-              {REPORT_TYPES.map((t) => (
-                <ToggleButton key={t.value} value={t.value}>
-                  {t.label}
-                </ToggleButton>
-              ))}
-            </ToggleButtonGroup>
+            <Stack direction="row" spacing={2} flexWrap="wrap" gap={1}>
+              <ToggleButtonGroup
+                value={subject}
+                exclusive
+                onChange={(_e, val) => {
+                  if (val) {
+                    setSubject(val);
+                    setCategoryId('');
+                    setReport(null);
+                  }
+                }}
+                color="primary"
+                size="small"
+              >
+                {REPORT_SUBJECTS.map((s) => (
+                  <ToggleButton key={s.value} value={s.value} sx={{ px: 2.5, fontWeight: 600 }}>
+                    {s.label}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+
+              <ToggleButtonGroup
+                value={reportType}
+                exclusive
+                onChange={(_e, val) => val && setReportType(val)}
+                size="small"
+              >
+                {REPORT_TYPES.map((t) => (
+                  <ToggleButton key={t.value} value={t.value}>
+                    {t.label}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+            </Stack>
 
             <Grid container spacing={2}>
               {reportType === 'daily' && (
@@ -236,33 +277,37 @@ export default function ReportsPage() {
                   size="small"
                 >
                   <MenuItem value="">All categories</MenuItem>
-                  {categories.map((c) => (
+                  {activeCategories.map((c) => (
                     <MenuItem key={c.id} value={c.id}>
                       {c.name}
                     </MenuItem>
                   ))}
                 </TextField>
               </Grid>
+
+              {subject === 'expenses' && (
+                <Grid item xs={12} sm={4}>
+                  <TextField
+                    select
+                    label="Payment mode"
+                    value={paymentMode}
+                    onChange={(e) => setPaymentMode(e.target.value)}
+                    fullWidth
+                    size="small"
+                  >
+                    <MenuItem value="">All modes</MenuItem>
+                    {PAYMENT_MODES.map((m) => (
+                      <MenuItem key={m.value} value={m.value}>
+                        {m.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+              )}
+
               <Grid item xs={12} sm={4}>
                 <TextField
-                  select
-                  label="Payment mode"
-                  value={paymentMode}
-                  onChange={(e) => setPaymentMode(e.target.value)}
-                  fullWidth
-                  size="small"
-                >
-                  <MenuItem value="">All modes</MenuItem>
-                  {PAYMENT_MODES.map((m) => (
-                    <MenuItem key={m.value} value={m.value}>
-                      {m.label}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  label="Merchant contains"
+                  label={subject === 'income' ? 'Source contains' : 'Merchant contains'}
                   value={merchant}
                   onChange={(e) => setMerchant(e.target.value)}
                   fullWidth
@@ -275,7 +320,7 @@ export default function ReportsPage() {
               <Button variant="contained" startIcon={<AssessmentRoundedIcon />} onClick={generate}>
                 Generate report
               </Button>
-              {report && (
+              {report && subject === 'expenses' && (
                 <Button variant="outlined" startIcon={<FileDownloadRoundedIcon />} onClick={exportCsv}>
                   Export this report
                 </Button>
@@ -291,7 +336,11 @@ export default function ReportsPage() {
         <>
           <Grid container spacing={2.5} sx={{ mb: 3 }}>
             <Grid item xs={6} md={2.4}>
-              <SummaryCard label="Total" value={report.totalExpenses} accent={tokens.color.ink} />
+              <SummaryCard
+                label={subject === 'income' ? 'Total Income' : 'Total Expenses'}
+                value={report.totalExpenses}
+                accent={subject === 'income' ? '#10b981' : tokens.color.ink}
+              />
             </Grid>
             <Grid item xs={6} md={2.4}>
               <SummaryCard label="Avg / day" value={report.averageDailySpending} accent={tokens.color.credit} />
@@ -330,7 +379,7 @@ export default function ReportsPage() {
                         <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                         <YAxis tick={{ fontSize: 11 }} width={40} />
                         <RechartsTooltip formatter={(value) => [`₹${value}`, 'Total']} />
-                        <Bar dataKey="total" fill={tokens.color.credit} radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="total" fill={subject === 'income' ? '#10b981' : tokens.color.credit} radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </Box>
@@ -351,7 +400,7 @@ export default function ReportsPage() {
                       </Stack>
                     ))}
                     {(report.categoryBreakdown || []).length === 0 && (
-                      <Typography color="text.secondary">No expenses in this window.</Typography>
+                      <Typography color="text.secondary">No records in this window.</Typography>
                     )}
                   </Stack>
                 </CardContent>

@@ -14,7 +14,7 @@ import ExpenseService from '../../services/expenseService';
 import { useNotification } from '../../context/NotificationContext';
 import { PAYMENT_MODES } from '../../utils/constants';
 import { toIsoDate, todayIso } from '../../utils/format';
-import { parseISO } from 'date-fns';
+import { addDays, parseISO } from 'date-fns';
 
 const emptyForm = {
   amount: '',
@@ -31,6 +31,8 @@ export default function ExpenseFormDialog({ open, onClose, onSaved, expense, cat
   const [saving, setSaving] = useState(false);
   const { notify, notifyError } = useNotification();
   const isEdit = Boolean(expense);
+
+  const maxAllowedDate = addDays(new Date(), 45);
 
   useEffect(() => {
     if (open) {
@@ -146,7 +148,7 @@ export default function ExpenseFormDialog({ open, onClose, onSaved, expense, cat
             label="Expense date"
             value={form.expenseDate ? parseISO(form.expenseDate) : null}
             onChange={(date) => setForm((prev) => ({ ...prev, expenseDate: toIsoDate(date) }))}
-            maxDate={new Date()}
+            maxDate={maxAllowedDate}
             slotProps={{
               textField: { fullWidth: true, error: Boolean(errors.expenseDate), helperText: errors.expenseDate },
             }}

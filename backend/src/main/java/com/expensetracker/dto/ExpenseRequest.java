@@ -36,6 +36,5 @@ public class ExpenseRequest {
     private PaymentMode paymentMode;
 
     @NotNull(message = "Expense date is mandatory")
-    @PastOrPresent(message = "Expense date cannot be in the future")
     private LocalDate expenseDate;
 }

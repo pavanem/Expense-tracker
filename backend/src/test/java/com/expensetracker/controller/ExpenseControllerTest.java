@@ -72,19 +72,18 @@ class ExpenseControllerTest {
     }
 
     @Test
-    void create_returns400_whenExpenseDateIsInFuture() throws Exception {
+    void create_returns400_whenExpenseDateExceeds45Days() throws Exception {
         ExpenseRequest invalid = ExpenseRequest.builder()
                 .amount(new BigDecimal("10.00"))
                 .categoryId(1L)
                 .paymentMode(PaymentMode.CASH)
-                .expenseDate(LocalDate.now().plusDays(1))
+                .expenseDate(LocalDate.now().plusDays(46))
                 .build();
 
         mockMvc.perform(post("/api/expenses")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(invalid)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.fieldErrors.expenseDate").exists());
+                .andExpect(status().isBadRequest());
     }
 
     @Test

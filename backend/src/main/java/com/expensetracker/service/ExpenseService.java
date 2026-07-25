@@ -7,6 +7,7 @@ import com.expensetracker.entity.Category;
 import com.expensetracker.entity.Expense;
 import com.expensetracker.entity.PaymentMode;
 import com.expensetracker.entity.User;
+import com.expensetracker.exception.InvalidRequestException;
 import com.expensetracker.exception.ResourceNotFoundException;
 import com.expensetracker.mapper.ExpenseMapper;
 import com.expensetracker.repository.CategoryRepository;
@@ -84,6 +85,10 @@ public class ExpenseService {
     }
 
     private void applyRequest(Expense expense, ExpenseRequest request, Long userId) {
+        if (request.getExpenseDate() != null && request.getExpenseDate().isAfter(LocalDate.now().plusDays(45))) {
+            throw new InvalidRequestException("Expense date cannot be more than 45 days in the future");
+        }
+
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> ResourceNotFoundException.forEntity("Category", request.getCategoryId()));
 

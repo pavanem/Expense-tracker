@@ -1,0 +1,8 @@
+com\expensetracker\acceptance\TestContext.class
+com\expensetracker\acceptance\steps\IncomeSteps.class
+com\expensetracker\acceptance\steps\AuthSteps.class
+com\expensetracker\acceptance\steps\ExpenseSteps.class
+com\expensetracker\acceptance\CucumberRunnerTest.class
+com\expensetracker\acceptance\CucumberSpringConfiguration.class
+com\expensetracker\acceptance\steps\DataIsolationSteps.class
+com\expensetracker\acceptance\steps\ReportSteps.class

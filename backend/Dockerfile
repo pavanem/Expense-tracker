@@ -19,7 +19,7 @@ RUN addgroup -S expense && adduser -S expense -G expense \
     && mkdir -p /app/logs && chown -R expense:expense /app
 USER expense
 
-COPY --from=build --chown=expense:expense /build/target/expense-tracker-backend.jar app.jar
+COPY --from=build --chown=expense:expense /build/target/expense-tracker-backend-exec.jar app.jar
 
 EXPOSE 8080
 

@@ -1,0 +1,9 @@
+2026-08-05T16:36:14.867+05:30  INFO 37548 --- [expense-tracker-backend] [main] org.testcontainers.images.PullPolicy     : Image pull policy will be performed by: DefaultPullPolicy()
+2026-08-05T16:36:14.879+05:30  INFO 37548 --- [expense-tracker-backend] [main] o.t.utility.ImageNameSubstitutor         : Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+2026-08-05T16:36:16.077+05:30  INFO 37548 --- [expense-tracker-backend] [main] o.t.d.DockerClientProviderStrategy       : Found Docker environment with local Npipe socket (npipe:////./pipe/docker_engine)
+2026-08-05T16:36:16.086+05:30  INFO 37548 --- [expense-tracker-backend] [main] org.testcontainers.DockerClientFactory   : Docker host IP address is localhost
+2026-08-05T16:36:16.114+05:30  INFO 37548 --- [expense-tracker-backend] [main] org.testcontainers.DockerClientFactory   : Connected to docker: 
+  Server Version: 29.6.1
+  API Version: 1.55
+  Operating System: Docker Desktop
+  Total Memory: 7828 MB

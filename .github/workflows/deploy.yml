@@ -11,33 +11,42 @@ on:
         default: "Manual trigger"
 
 # Prevent two deploys running at the same time.
-# If a deploy is already in progress and another push lands, the new one
-# queues — it does NOT cancel the in-progress run (that would leave the
-# server in a half-deployed state).
 concurrency:
   group: production-deploy
   cancel-in-progress: false
 
 jobs:
   # ---------------------------------------------------------------------------
-  # Optional: uncomment this job and add `needs: test` to the deploy job
-  # below to run Maven tests before every deploy.
+  # Quality Gate: Run Cucumber Acceptance & Regression Tests
   # ---------------------------------------------------------------------------
-  # test:
-  #   name: Run Tests
-  #   runs-on: self-hosted
-  #   steps:
-  #     - name: Run Maven tests
-  #       run: |
-  #         cd /home/pavan/Apps/Expense-Tracker/backend
-  #         mvn test --no-transfer-progress
-  # ---------------------------------------------------------------------------
+  acceptance-tests:
+    name: Acceptance Tests (Quality Gate)
+    runs-on: self-hosted
+    steps:
+      - name: Pull latest code
+        run: |
+          cd /home/pavan/Apps/Expense-Tracker
+          git fetch origin main
+          git reset --hard origin/main
 
+      - name: Install backend artifact locally
+        run: |
+          cd /home/pavan/Apps/Expense-Tracker/backend
+          mvn clean install -DskipTests --no-transfer-progress
+
+      - name: Run Cucumber acceptance tests
+        run: |
+          cd /home/pavan/Apps/Expense-Tracker/acceptance-tests
+          mvn clean test --no-transfer-progress
+
+  # ---------------------------------------------------------------------------
+  # Deploy: Only runs if acceptance-tests quality gate passes
+  # ---------------------------------------------------------------------------
   deploy:
     name: Build & Deploy
     runs-on: self-hosted
-    # needs: test          # ← uncomment when you enable the test job above
-    timeout-minutes: 15   # fail the deploy if it hangs (e.g. stuck Docker build)
+    needs: acceptance-tests
+    timeout-minutes: 15
 
     steps:
       # ── 1. Pull latest code ──────────────────────────────────────────────
@@ -46,16 +55,12 @@ jobs:
           cd /home/pavan/Apps/Expense-Tracker
           git fetch origin main
           git reset --hard origin/main
-        # reset --hard instead of pull so the working tree always matches main
-        # exactly, even if someone manually edited a file on the server.
 
       # ── 2. Build images & restart containers ─────────────────────────────
       - name: Build & restart services
         run: |
           cd /home/pavan/Apps/Expense-Tracker
           docker compose up -d --build --remove-orphans
-        # --remove-orphans cleans up containers for services removed from
-        # docker-compose.yml between deploys.
 
       # ── 3. Wait for containers to initialise ─────────────────────────────
       - name: Wait for services to initialise
@@ -106,7 +111,7 @@ jobs:
 
       # ── 6. Summary ────────────────────────────────────────────────────────
       - name: Show running containers
-        if: always()    # runs even if an earlier step failed
+        if: always()
         run: |
           cd /home/pavan/Apps/Expense-Tracker
           docker compose ps

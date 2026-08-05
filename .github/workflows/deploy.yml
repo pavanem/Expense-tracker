@@ -23,20 +23,42 @@ jobs:
     name: Acceptance Tests (Quality Gate)
     runs-on: self-hosted
     steps:
-      - name: Pull latest code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 & Maven
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Ensure Maven is in PATH
         run: |
-          cd /home/pavan/Apps/Expense-Tracker
-          git fetch origin main
-          git reset --hard origin/main
+          if ! command -v mvn &> /dev/null; then
+            [ -s "$HOME/.bashrc" ] && source "$HOME/.bashrc" 2>/dev/null || true
+            [ -s "$HOME/.profile" ] && source "$HOME/.profile" 2>/dev/null || true
+            [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && source "$HOME/.sdkman/bin/sdkman-init.sh" 2>/dev/null || true
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/share/maven/bin:/opt/maven/bin:$HOME/.sdkman/candidates/maven/current/bin:$HOME/.m2/bin
+          fi
+          mvn -version
 
       - name: Install backend artifact locally
         run: |
-          cd /home/pavan/Apps/Expense-Tracker/backend
+          if ! command -v mvn &> /dev/null; then
+            [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && source "$HOME/.sdkman/bin/sdkman-init.sh" 2>/dev/null || true
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/share/maven/bin:/opt/maven/bin:$HOME/.sdkman/candidates/maven/current/bin
+          fi
+          cd backend
           mvn clean install -DskipTests --no-transfer-progress
 
       - name: Run Cucumber acceptance tests
         run: |
-          cd /home/pavan/Apps/Expense-Tracker/acceptance-tests
+          if ! command -v mvn &> /dev/null; then
+            [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && source "$HOME/.sdkman/bin/sdkman-init.sh" 2>/dev/null || true
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/share/maven/bin:/opt/maven/bin:$HOME/.sdkman/candidates/maven/current/bin
+          fi
+          cd acceptance-tests
           mvn clean test --no-transfer-progress
 
   # ---------------------------------------------------------------------------

@@ -26,38 +26,42 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21 & Maven
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: maven
 
-      - name: Ensure Maven is in PATH
+      - name: Ensure Maven is available
         run: |
+          # 1. Try existing PATH & profiles
+          [ -s "$HOME/.bashrc" ] && source "$HOME/.bashrc" 2>/dev/null || true
+          [ -s "$HOME/.profile" ] && source "$HOME/.profile" 2>/dev/null || true
+          [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && source "$HOME/.sdkman/bin/sdkman-init.sh" 2>/dev/null || true
+          export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/share/maven/bin:/opt/maven/bin:$HOME/.sdkman/candidates/maven/current/bin:$HOME/.m2/bin:$HOME/.maven-portable/bin
+
+          # 2. Auto-install portable Maven 3.9.9 if still missing
           if ! command -v mvn &> /dev/null; then
-            [ -s "$HOME/.bashrc" ] && source "$HOME/.bashrc" 2>/dev/null || true
-            [ -s "$HOME/.profile" ] && source "$HOME/.profile" 2>/dev/null || true
-            [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && source "$HOME/.sdkman/bin/sdkman-init.sh" 2>/dev/null || true
-            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/share/maven/bin:/opt/maven/bin:$HOME/.sdkman/candidates/maven/current/bin:$HOME/.m2/bin
+            echo "Maven not found in system PATH. Auto-installing portable Maven 3.9.9 to $HOME/.maven-portable..."
+            mkdir -p "$HOME/.maven-portable"
+            curl -fsSL https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz | tar -xz -C "$HOME/.maven-portable" --strip-components=1
+            export PATH="$HOME/.maven-portable/bin:$PATH"
           fi
+
+          echo "Maven location: $(which mvn)"
           mvn -version
 
       - name: Install backend artifact locally
         run: |
-          if ! command -v mvn &> /dev/null; then
-            [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && source "$HOME/.sdkman/bin/sdkman-init.sh" 2>/dev/null || true
-            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/share/maven/bin:/opt/maven/bin:$HOME/.sdkman/candidates/maven/current/bin
-          fi
+          [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && source "$HOME/.sdkman/bin/sdkman-init.sh" 2>/dev/null || true
+          export PATH=$PATH:$HOME/.maven-portable/bin:/usr/local/bin:/usr/bin:/bin:/usr/share/maven/bin:/opt/maven/bin:$HOME/.sdkman/candidates/maven/current/bin
           cd backend
           mvn clean install -DskipTests --no-transfer-progress
 
       - name: Run Cucumber acceptance tests
         run: |
-          if ! command -v mvn &> /dev/null; then
-            [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && source "$HOME/.sdkman/bin/sdkman-init.sh" 2>/dev/null || true
-            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/share/maven/bin:/opt/maven/bin:$HOME/.sdkman/candidates/maven/current/bin
-          fi
+          [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && source "$HOME/.sdkman/bin/sdkman-init.sh" 2>/dev/null || true
+          export PATH=$PATH:$HOME/.maven-portable/bin:/usr/local/bin:/usr/bin:/bin:/usr/share/maven/bin:/opt/maven/bin:$HOME/.sdkman/candidates/maven/current/bin
           cd acceptance-tests
           mvn clean test --no-transfer-progress
 

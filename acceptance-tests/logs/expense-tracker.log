@@ -7,3 +7,419 @@
   API Version: 1.55
   Operating System: Docker Desktop
   Total Memory: 7828 MB
+2026-08-05T18:41:23.584+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] c.e.a.CucumberSpringConfiguration        : Starting CucumberSpringConfiguration using Java 21.0.11 with PID 21732 (started by Pavan in C:\Projects\Expense-tracking\Expense-tracker\acceptance-tests)
+2026-08-05T18:41:23.588+05:30 DEBUG 21732 --- [expense-tracker-acceptance-tests] [main] c.e.a.CucumberSpringConfiguration        : Running with Spring Boot v3.3.4, Spring v6.1.13
+2026-08-05T18:41:23.589+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] c.e.a.CucumberSpringConfiguration        : The following 1 profile is active: "test"
+2026-08-05T18:41:26.001+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-08-05T18:41:26.125+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 109 ms. Found 6 JPA repository interfaces.
+2026-08-05T18:41:27.711+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 0 (http)
+2026-08-05T18:41:27.738+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-08-05T18:41:27.739+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.30]
+2026-08-05T18:41:27.888+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-08-05T18:41:27.889+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3956 ms
+2026-08-05T18:41:28.428+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] o.s.boot.web.servlet.RegistrationBean    : Filter disableAutoFilterRegistration was not registered (disabled)
+2026-08-05T18:41:28.829+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-08-05T18:41:29.169+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:expense_tracker_test user=SA
+2026-08-05T18:41:29.171+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-08-05T18:41:29.267+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:h2:mem:expense_tracker_test (H2 2.2)
+2026-08-05T18:41:29.274+05:30  WARN 21732 --- [expense-tracker-acceptance-tests] [main] o.f.c.internal.database.base.Database    : Flyway upgrade recommended: H2 2.2.224 is newer than this version of Flyway and support has not been tested. The latest supported version of H2 is 2.2.220.
+2026-08-05T18:41:29.318+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] o.f.c.i.s.JdbcTableSchemaHistory         : Schema history table "public"."flyway_schema_history" does not exist yet
+2026-08-05T18:41:29.322+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] o.f.core.internal.command.DbValidate     : Successfully validated 10 migrations (execution time 00:00.029s)
+2026-08-05T18:41:29.336+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table "public"."flyway_schema_history" ...
+2026-08-05T18:41:29.392+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": << Empty Schema >>
+2026-08-05T18:41:29.401+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "1 - create category table"
+2026-08-05T18:41:29.433+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "2 - create expense table"
+2026-08-05T18:41:29.451+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "3 - seed default categories"
+2026-08-05T18:41:29.465+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "4 - seed sample expenses"
+2026-08-05T18:41:29.487+05:30 ERROR 21732 --- [expense-tracker-acceptance-tests] [main] o.f.core.internal.command.DbMigrate      : Migration of schema "public" to version "4 - seed sample expenses" failed! Please restore backups and roll back database and code!
+2026-08-05T18:41:29.495+05:30  WARN 21732 --- [expense-tracker-acceptance-tests] [main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [org/springframework/boot/autoconfigure/orm/jpa/HibernateJpaConfiguration.class]: Failed to initialize dependency 'flywayInitializer' of LoadTimeWeaverAware bean 'entityManagerFactory': Error creating bean with name 'flywayInitializer' defined in class path resource [org/springframework/boot/autoconfigure/flyway/FlywayAutoConfiguration$FlywayConfiguration.class]: Migration V4__seed_sample_expenses.sql failed
+---------------------------------------------
+SQL State  : 22007
+Error Code : 22007
+Message    : Cannot parse "INTERVAL" constant "12 days"; SQL statement:
+-- Sample seed data for local development / demo purposes.
+-- Safe to run in prod too (small, harmless dataset); remove if not desired.
+
+INSERT INTO expense (amount, category_id, merchant, description, payment_mode, expense_date) VALUES
+    (120.00, (SELECT id FROM category WHERE name = 'Food'),      'Cafe Coffee Day', 'Breakfast',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (250.00, (SELECT id FROM category WHERE name = 'Food'),      'Domino''s',       'Lunch',               'CREDIT_CARD', CURRENT_DATE - INTERVAL '12 days'),
+    (1800.00,(SELECT id FROM category WHERE name = 'Fuel'),      'Indian Oil',      'Bike fuel',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (180.00, (SELECT id FROM category WHERE name = 'Food'),      'Starbucks',       'Coffee',              'UPI',         CURRENT_DATE - INTERVAL '11 days'),
+    (2500.00,(SELECT id FROM category WHERE name = 'Shopping'),  'Amazon',          'Headphones',          'CREDIT_CARD', CURRENT_DATE - INTERVAL '11 days'),
+    (3200.00,(SELECT id FROM category WHERE name = 'Groceries'), 'Big Bazaar',      'Monthly groceries',   'DEBIT_CARD',  CURRENT_DATE - INTERVAL '9 days'),
+    (15000.00,(SELECT id FROM category WHERE name = 'EMI'),      'HDFC Bank',       'Bike EMI',            'NET_BANKING', CURRENT_DATE - INTERVAL '8 days'),
+    (600.00, (SELECT id FROM category WHERE name = 'Medical'),   'Apollo Pharmacy', 'Monthly medicines',   'UPI',         CURRENT_DATE - INTERVAL '6 days'),
+    (450.00, (SELECT id FROM category WHERE name = 'Entertainment'),'PVR Cinemas',  'Movie tickets',       'UPI',         CURRENT_DATE - INTERVAL '4 days'),
+    (999.00, (SELECT id FROM category WHERE name = 'Bills'),     'Airtel',          'Mobile recharge',     'UPI',         CURRENT_DATE - INTERVAL '2 days'),
+    (5000.00,(SELECT id FROM category WHERE name = 'Investment'),'Zerodha',         'SIP investment',      'NET_BANKING', CURRENT_DATE - INTERVAL '1 days'),
+    (75.00,  (SELECT id FROM category WHERE name = 'Others'),    NULL,              'Misc expense',        'CASH',        CURRENT_DATE) [22007-224]
+Location   : db/migration/V4__seed_sample_expenses.sql (C:\Projects\Expense-tracking\Expense-tracker\acceptance-tests\file:\C:\Users\Pavan\.m2\repository\com\expensetracker\expense-tracker-backend\1.0.0\expense-tracker-backend-1.0.0.jar!\db\migration\V4__seed_sample_expenses.sql)
+Line       : 4
+Statement  : -- Sample seed data for local development / demo purposes.
+-- Safe to run in prod too (small, harmless dataset); remove if not desired.
+
+INSERT INTO expense (amount, category_id, merchant, description, payment_mode, expense_date) VALUES
+    (120.00, (SELECT id FROM category WHERE name = 'Food'),      'Cafe Coffee Day', 'Breakfast',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (250.00, (SELECT id FROM category WHERE name = 'Food'),      'Domino''s',       'Lunch',               'CREDIT_CARD', CURRENT_DATE - INTERVAL '12 days'),
+    (1800.00,(SELECT id FROM category WHERE name = 'Fuel'),      'Indian Oil',      'Bike fuel',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (180.00, (SELECT id FROM category WHERE name = 'Food'),      'Starbucks',       'Coffee',              'UPI',         CURRENT_DATE - INTERVAL '11 days'),
+    (2500.00,(SELECT id FROM category WHERE name = 'Shopping'),  'Amazon',          'Headphones',          'CREDIT_CARD', CURRENT_DATE - INTERVAL '11 days'),
+    (3200.00,(SELECT id FROM category WHERE name = 'Groceries'), 'Big Bazaar',      'Monthly groceries',   'DEBIT_CARD',  CURRENT_DATE - INTERVAL '9 days'),
+    (15000.00,(SELECT id FROM category WHERE name = 'EMI'),      'HDFC Bank',       'Bike EMI',            'NET_BANKING', CURRENT_DATE - INTERVAL '8 days'),
+    (600.00, (SELECT id FROM category WHERE name = 'Medical'),   'Apollo Pharmacy', 'Monthly medicines',   'UPI',         CURRENT_DATE - INTERVAL '6 days'),
+    (450.00, (SELECT id FROM category WHERE name = 'Entertainment'),'PVR Cinemas',  'Movie tickets',       'UPI',         CURRENT_DATE - INTERVAL '4 days'),
+    (999.00, (SELECT id FROM category WHERE name = 'Bills'),     'Airtel',          'Mobile recharge',     'UPI',         CURRENT_DATE - INTERVAL '2 days'),
+    (5000.00,(SELECT id FROM category WHERE name = 'Investment'),'Zerodha',         'SIP investment',      'NET_BANKING', CURRENT_DATE - INTERVAL '1 days'),
+    (75.00,  (SELECT id FROM category WHERE name = 'Others'),    NULL,              'Misc expense',        'CASH',        CURRENT_DATE)
+
+2026-08-05T18:41:29.497+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-08-05T18:41:29.499+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2026-08-05T18:41:29.504+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
+2026-08-05T18:41:29.529+05:30  INFO 21732 --- [expense-tracker-acceptance-tests] [main] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-08-05T18:41:29.567+05:30 ERROR 21732 --- [expense-tracker-acceptance-tests] [main] o.s.boot.SpringApplication               : Application run failed
+
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [org/springframework/boot/autoconfigure/orm/jpa/HibernateJpaConfiguration.class]: Failed to initialize dependency 'flywayInitializer' of LoadTimeWeaverAware bean 'entityManagerFactory': Error creating bean with name 'flywayInitializer' defined in class path resource [org/springframework/boot/autoconfigure/flyway/FlywayAutoConfiguration$FlywayConfiguration.class]: Migration V4__seed_sample_expenses.sql failed
+---------------------------------------------
+SQL State  : 22007
+Error Code : 22007
+Message    : Cannot parse "INTERVAL" constant "12 days"; SQL statement:
+-- Sample seed data for local development / demo purposes.
+-- Safe to run in prod too (small, harmless dataset); remove if not desired.
+
+INSERT INTO expense (amount, category_id, merchant, description, payment_mode, expense_date) VALUES
+    (120.00, (SELECT id FROM category WHERE name = 'Food'),      'Cafe Coffee Day', 'Breakfast',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (250.00, (SELECT id FROM category WHERE name = 'Food'),      'Domino''s',       'Lunch',               'CREDIT_CARD', CURRENT_DATE - INTERVAL '12 days'),
+    (1800.00,(SELECT id FROM category WHERE name = 'Fuel'),      'Indian Oil',      'Bike fuel',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (180.00, (SELECT id FROM category WHERE name = 'Food'),      'Starbucks',       'Coffee',              'UPI',         CURRENT_DATE - INTERVAL '11 days'),
+    (2500.00,(SELECT id FROM category WHERE name = 'Shopping'),  'Amazon',          'Headphones',          'CREDIT_CARD', CURRENT_DATE - INTERVAL '11 days'),
+    (3200.00,(SELECT id FROM category WHERE name = 'Groceries'), 'Big Bazaar',      'Monthly groceries',   'DEBIT_CARD',  CURRENT_DATE - INTERVAL '9 days'),
+    (15000.00,(SELECT id FROM category WHERE name = 'EMI'),      'HDFC Bank',       'Bike EMI',            'NET_BANKING', CURRENT_DATE - INTERVAL '8 days'),
+    (600.00, (SELECT id FROM category WHERE name = 'Medical'),   'Apollo Pharmacy', 'Monthly medicines',   'UPI',         CURRENT_DATE - INTERVAL '6 days'),
+    (450.00, (SELECT id FROM category WHERE name = 'Entertainment'),'PVR Cinemas',  'Movie tickets',       'UPI',         CURRENT_DATE - INTERVAL '4 days'),
+    (999.00, (SELECT id FROM category WHERE name = 'Bills'),     'Airtel',          'Mobile recharge',     'UPI',         CURRENT_DATE - INTERVAL '2 days'),
+    (5000.00,(SELECT id FROM category WHERE name = 'Investment'),'Zerodha',         'SIP investment',      'NET_BANKING', CURRENT_DATE - INTERVAL '1 days'),
+    (75.00,  (SELECT id FROM category WHERE name = 'Others'),    NULL,              'Misc expense',        'CASH',        CURRENT_DATE) [22007-224]
+Location   : db/migration/V4__seed_sample_expenses.sql (C:\Projects\Expense-tracking\Expense-tracker\acceptance-tests\file:\C:\Users\Pavan\.m2\repository\com\expensetracker\expense-tracker-backend\1.0.0\expense-tracker-backend-1.0.0.jar!\db\migration\V4__seed_sample_expenses.sql)
+Line       : 4
+Statement  : -- Sample seed data for local development / demo purposes.
+-- Safe to run in prod too (small, harmless dataset); remove if not desired.
+
+INSERT INTO expense (amount, category_id, merchant, description, payment_mode, expense_date) VALUES
+    (120.00, (SELECT id FROM category WHERE name = 'Food'),      'Cafe Coffee Day', 'Breakfast',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (250.00, (SELECT id FROM category WHERE name = 'Food'),      'Domino''s',       'Lunch',               'CREDIT_CARD', CURRENT_DATE - INTERVAL '12 days'),
+    (1800.00,(SELECT id FROM category WHERE name = 'Fuel'),      'Indian Oil',      'Bike fuel',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (180.00, (SELECT id FROM category WHERE name = 'Food'),      'Starbucks',       'Coffee',              'UPI',         CURRENT_DATE - INTERVAL '11 days'),
+    (2500.00,(SELECT id FROM category WHERE name = 'Shopping'),  'Amazon',          'Headphones',          'CREDIT_CARD', CURRENT_DATE - INTERVAL '11 days'),
+    (3200.00,(SELECT id FROM category WHERE name = 'Groceries'), 'Big Bazaar',      'Monthly groceries',   'DEBIT_CARD',  CURRENT_DATE - INTERVAL '9 days'),
+    (15000.00,(SELECT id FROM category WHERE name = 'EMI'),      'HDFC Bank',       'Bike EMI',            'NET_BANKING', CURRENT_DATE - INTERVAL '8 days'),
+    (600.00, (SELECT id FROM category WHERE name = 'Medical'),   'Apollo Pharmacy', 'Monthly medicines',   'UPI',         CURRENT_DATE - INTERVAL '6 days'),
+    (450.00, (SELECT id FROM category WHERE name = 'Entertainment'),'PVR Cinemas',  'Movie tickets',       'UPI',         CURRENT_DATE - INTERVAL '4 days'),
+    (999.00, (SELECT id FROM category WHERE name = 'Bills'),     'Airtel',          'Mobile recharge',     'UPI',         CURRENT_DATE - INTERVAL '2 days'),
+    (5000.00,(SELECT id FROM category WHERE name = 'Investment'),'Zerodha',         'SIP investment',      'NET_BANKING', CURRENT_DATE - INTERVAL '1 days'),
+    (75.00,  (SELECT id FROM category WHERE name = 'Others'),    NULL,              'Misc expense',        'CASH',        CURRENT_DATE)
+
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:326) ~[spring-beans-6.1.13.jar:6.1.13]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:205) ~[spring-beans-6.1.13.jar:6.1.13]
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:954) ~[spring-context-6.1.13.jar:6.1.13]
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:625) ~[spring-context-6.1.13.jar:6.1.13]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146) ~[spring-boot-3.3.4.jar:3.3.4]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754) ~[spring-boot-3.3.4.jar:3.3.4]
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456) ~[spring-boot-3.3.4.jar:3.3.4]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:335) ~[spring-boot-3.3.4.jar:3.3.4]
+	at org.springframework.boot.test.context.SpringBootContextLoader.lambda$loadContext$3(SpringBootContextLoader.java:137) ~[spring-boot-test-3.3.4.jar:3.3.4]
+	at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:58) ~[spring-core-6.1.13.jar:6.1.13]
+	at org.springframework.util.function.ThrowingSupplier.get(ThrowingSupplier.java:46) ~[spring-core-6.1.13.jar:6.1.13]
+	at org.springframework.boot.SpringApplication.withHook(SpringApplication.java:1463) ~[spring-boot-3.3.4.jar:3.3.4]
+	at org.springframework.boot.test.context.SpringBootContextLoader$ContextLoaderHook.run(SpringBootContextLoader.java:553) ~[spring-boot-test-3.3.4.jar:3.3.4]
+	at org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:137) ~[spring-boot-test-3.3.4.jar:3.3.4]
+	at org.springframework.boot.test.context.SpringBootContextLoader.loadContext(SpringBootContextLoader.java:108) ~[spring-boot-test-3.3.4.jar:3.3.4]
+	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContextInternal(DefaultCacheAwareContextLoaderDelegate.java:225) ~[spring-test-6.1.13.jar:6.1.13]
+	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:152) ~[spring-test-6.1.13.jar:6.1.13]
+	at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130) ~[spring-test-6.1.13.jar:6.1.13]
+	at io.cucumber.spring.TestContextAdaptor.create(TestContextAdaptor.java:42) ~[cucumber-spring-7.18.1.jar:7.18.1]
+	at io.cucumber.spring.SpringFactory.start(SpringFactory.java:121) ~[cucumber-spring-7.18.1.jar:7.18.1]
+	at io.cucumber.core.runner.Runner.buildBackendWorlds(Runner.java:134) ~[cucumber-core-7.18.1.jar:7.18.1]
+	at io.cucumber.core.runner.Runner.runPickle(Runner.java:70) ~[cucumber-core-7.18.1.jar:7.18.1]
+	at io.cucumber.junit.platform.engine.CucumberEngineExecutionContext.lambda$runTestCase$4(CucumberEngineExecutionContext.java:112) ~[cucumber-junit-platform-engine-7.18.1.jar:na]
+	at io.cucumber.core.runtime.CucumberExecutionContext.lambda$runTestCase$5(CucumberExecutionContext.java:136) ~[cucumber-core-7.18.1.jar:7.18.1]
+	at io.cucumber.core.runtime.RethrowingThrowableCollector.executeAndThrow(RethrowingThrowableCollector.java:23) ~[cucumber-core-7.18.1.jar:7.18.1]
+	at io.cucumber.core.runtime.CucumberExecutionContext.runTestCase(CucumberExecutionContext.java:136) ~[cucumber-core-7.18.1.jar:7.18.1]
+	at io.cucumber.junit.platform.engine.CucumberEngineExecutionContext.runTestCase(CucumberEngineExecutionContext.java:109) ~[cucumber-junit-platform-engine-7.18.1.jar:na]
+	at io.cucumber.junit.platform.engine.NodeDescriptor$PickleDescriptor.execute(NodeDescriptor.java:168) ~[cucumber-junit-platform-engine-7.18.1.jar:na]
+	at io.cucumber.junit.platform.engine.NodeDescriptor$PickleDescriptor.execute(NodeDescriptor.java:90) ~[cucumber-junit-platform-engine-7.18.1.jar:na]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:151) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54) ~[junit-platform-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:198) ~[junit-platform-launcher-1.10.3.jar:1.10.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:169) ~[junit-platform-launcher-1.10.3.jar:1.10.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:93) ~[junit-platform-launcher-1.10.3.jar:1.10.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:76) ~[junit-platform-launcher-1.10.3.jar:1.10.3]
+	at org.junit.platform.suite.engine.SuiteLauncher.execute(SuiteLauncher.java:63) ~[junit-platform-suite-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.suite.engine.SuiteTestDescriptor.execute(SuiteTestDescriptor.java:129) ~[junit-platform-suite-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.suite.engine.SuiteTestEngine.lambda$execute$0(SuiteTestEngine.java:73) ~[junit-platform-suite-engine-1.10.3.jar:1.10.3]
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184) ~[na:na]
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197) ~[na:na]
+	at java.base/java.util.Iterator.forEachRemaining(Iterator.java:133) ~[na:na]
+	at java.base/java.util.Spliterators$IteratorSpliterator.forEachRemaining(Spliterators.java:1939) ~[na:na]
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509) ~[na:na]
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499) ~[na:na]
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151) ~[na:na]
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174) ~[na:na]
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234) ~[na:na]
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596) ~[na:na]
+	at org.junit.platform.suite.engine.SuiteTestEngine.execute(SuiteTestEngine.java:73) ~[junit-platform-suite-engine-1.10.3.jar:1.10.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:198) ~[junit-platform-launcher-1.10.3.jar:1.10.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:169) ~[junit-platform-launcher-1.10.3.jar:1.10.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:93) ~[junit-platform-launcher-1.10.3.jar:1.10.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:58) ~[junit-platform-launcher-1.10.3.jar:1.10.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:141) ~[junit-platform-launcher-1.10.3.jar:1.10.3]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:57) ~[junit-platform-launcher-1.10.3.jar:1.10.3]
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:103) ~[junit-platform-launcher-1.10.3.jar:1.10.3]
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:85) ~[junit-platform-launcher-1.10.3.jar:1.10.3]
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47) ~[junit-platform-launcher-1.10.3.jar:1.10.3]
+	at org.apache.maven.surefire.junitplatform.LazyLauncher.execute(LazyLauncher.java:56) ~[surefire-junit-platform-3.3.1.jar:3.3.1]
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:184) ~[surefire-junit-platform-3.3.1.jar:3.3.1]
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:148) ~[surefire-junit-platform-3.3.1.jar:3.3.1]
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:122) ~[surefire-junit-platform-3.3.1.jar:3.3.1]
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385) ~[surefire-booter-3.3.1.jar:3.3.1]
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162) ~[surefire-booter-3.3.1.jar:3.3.1]
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507) ~[surefire-booter-3.3.1.jar:3.3.1]
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495) ~[surefire-booter-3.3.1.jar:3.3.1]
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'flywayInitializer' defined in class path resource [org/springframework/boot/autoconfigure/flyway/FlywayAutoConfiguration$FlywayConfiguration.class]: Migration V4__seed_sample_expenses.sql failed
+---------------------------------------------
+SQL State  : 22007
+Error Code : 22007
+Message    : Cannot parse "INTERVAL" constant "12 days"; SQL statement:
+-- Sample seed data for local development / demo purposes.
+-- Safe to run in prod too (small, harmless dataset); remove if not desired.
+
+INSERT INTO expense (amount, category_id, merchant, description, payment_mode, expense_date) VALUES
+    (120.00, (SELECT id FROM category WHERE name = 'Food'),      'Cafe Coffee Day', 'Breakfast',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (250.00, (SELECT id FROM category WHERE name = 'Food'),      'Domino''s',       'Lunch',               'CREDIT_CARD', CURRENT_DATE - INTERVAL '12 days'),
+    (1800.00,(SELECT id FROM category WHERE name = 'Fuel'),      'Indian Oil',      'Bike fuel',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (180.00, (SELECT id FROM category WHERE name = 'Food'),      'Starbucks',       'Coffee',              'UPI',         CURRENT_DATE - INTERVAL '11 days'),
+    (2500.00,(SELECT id FROM category WHERE name = 'Shopping'),  'Amazon',          'Headphones',          'CREDIT_CARD', CURRENT_DATE - INTERVAL '11 days'),
+    (3200.00,(SELECT id FROM category WHERE name = 'Groceries'), 'Big Bazaar',      'Monthly groceries',   'DEBIT_CARD',  CURRENT_DATE - INTERVAL '9 days'),
+    (15000.00,(SELECT id FROM category WHERE name = 'EMI'),      'HDFC Bank',       'Bike EMI',            'NET_BANKING', CURRENT_DATE - INTERVAL '8 days'),
+    (600.00, (SELECT id FROM category WHERE name = 'Medical'),   'Apollo Pharmacy', 'Monthly medicines',   'UPI',         CURRENT_DATE - INTERVAL '6 days'),
+    (450.00, (SELECT id FROM category WHERE name = 'Entertainment'),'PVR Cinemas',  'Movie tickets',       'UPI',         CURRENT_DATE - INTERVAL '4 days'),
+    (999.00, (SELECT id FROM category WHERE name = 'Bills'),     'Airtel',          'Mobile recharge',     'UPI',         CURRENT_DATE - INTERVAL '2 days'),
+    (5000.00,(SELECT id FROM category WHERE name = 'Investment'),'Zerodha',         'SIP investment',      'NET_BANKING', CURRENT_DATE - INTERVAL '1 days'),
+    (75.00,  (SELECT id FROM category WHERE name = 'Others'),    NULL,              'Misc expense',        'CASH',        CURRENT_DATE) [22007-224]
+Location   : db/migration/V4__seed_sample_expenses.sql (C:\Projects\Expense-tracking\Expense-tracker\acceptance-tests\file:\C:\Users\Pavan\.m2\repository\com\expensetracker\expense-tracker-backend\1.0.0\expense-tracker-backend-1.0.0.jar!\db\migration\V4__seed_sample_expenses.sql)
+Line       : 4
+Statement  : -- Sample seed data for local development / demo purposes.
+-- Safe to run in prod too (small, harmless dataset); remove if not desired.
+
+INSERT INTO expense (amount, category_id, merchant, description, payment_mode, expense_date) VALUES
+    (120.00, (SELECT id FROM category WHERE name = 'Food'),      'Cafe Coffee Day', 'Breakfast',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (250.00, (SELECT id FROM category WHERE name = 'Food'),      'Domino''s',       'Lunch',               'CREDIT_CARD', CURRENT_DATE - INTERVAL '12 days'),
+    (1800.00,(SELECT id FROM category WHERE name = 'Fuel'),      'Indian Oil',      'Bike fuel',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (180.00, (SELECT id FROM category WHERE name = 'Food'),      'Starbucks',       'Coffee',              'UPI',         CURRENT_DATE - INTERVAL '11 days'),
+    (2500.00,(SELECT id FROM category WHERE name = 'Shopping'),  'Amazon',          'Headphones',          'CREDIT_CARD', CURRENT_DATE - INTERVAL '11 days'),
+    (3200.00,(SELECT id FROM category WHERE name = 'Groceries'), 'Big Bazaar',      'Monthly groceries',   'DEBIT_CARD',  CURRENT_DATE - INTERVAL '9 days'),
+    (15000.00,(SELECT id FROM category WHERE name = 'EMI'),      'HDFC Bank',       'Bike EMI',            'NET_BANKING', CURRENT_DATE - INTERVAL '8 days'),
+    (600.00, (SELECT id FROM category WHERE name = 'Medical'),   'Apollo Pharmacy', 'Monthly medicines',   'UPI',         CURRENT_DATE - INTERVAL '6 days'),
+    (450.00, (SELECT id FROM category WHERE name = 'Entertainment'),'PVR Cinemas',  'Movie tickets',       'UPI',         CURRENT_DATE - INTERVAL '4 days'),
+    (999.00, (SELECT id FROM category WHERE name = 'Bills'),     'Airtel',          'Mobile recharge',     'UPI',         CURRENT_DATE - INTERVAL '2 days'),
+    (5000.00,(SELECT id FROM category WHERE name = 'Investment'),'Zerodha',         'SIP investment',      'NET_BANKING', CURRENT_DATE - INTERVAL '1 days'),
+    (75.00,  (SELECT id FROM category WHERE name = 'Others'),    NULL,              'Misc expense',        'CASH',        CURRENT_DATE)
+
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1806) ~[spring-beans-6.1.13.jar:6.1.13]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:600) ~[spring-beans-6.1.13.jar:6.1.13]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522) ~[spring-beans-6.1.13.jar:6.1.13]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:337) ~[spring-beans-6.1.13.jar:6.1.13]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234) ~[spring-beans-6.1.13.jar:6.1.13]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:335) ~[spring-beans-6.1.13.jar:6.1.13]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:200) ~[spring-beans-6.1.13.jar:6.1.13]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:313) ~[spring-beans-6.1.13.jar:6.1.13]
+	... 94 common frames omitted
+Caused by: org.flywaydb.core.internal.command.DbMigrate$FlywayMigrateException: Migration V4__seed_sample_expenses.sql failed
+---------------------------------------------
+SQL State  : 22007
+Error Code : 22007
+Message    : Cannot parse "INTERVAL" constant "12 days"; SQL statement:
+-- Sample seed data for local development / demo purposes.
+-- Safe to run in prod too (small, harmless dataset); remove if not desired.
+
+INSERT INTO expense (amount, category_id, merchant, description, payment_mode, expense_date) VALUES
+    (120.00, (SELECT id FROM category WHERE name = 'Food'),      'Cafe Coffee Day', 'Breakfast',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (250.00, (SELECT id FROM category WHERE name = 'Food'),      'Domino''s',       'Lunch',               'CREDIT_CARD', CURRENT_DATE - INTERVAL '12 days'),
+    (1800.00,(SELECT id FROM category WHERE name = 'Fuel'),      'Indian Oil',      'Bike fuel',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (180.00, (SELECT id FROM category WHERE name = 'Food'),      'Starbucks',       'Coffee',              'UPI',         CURRENT_DATE - INTERVAL '11 days'),
+    (2500.00,(SELECT id FROM category WHERE name = 'Shopping'),  'Amazon',          'Headphones',          'CREDIT_CARD', CURRENT_DATE - INTERVAL '11 days'),
+    (3200.00,(SELECT id FROM category WHERE name = 'Groceries'), 'Big Bazaar',      'Monthly groceries',   'DEBIT_CARD',  CURRENT_DATE - INTERVAL '9 days'),
+    (15000.00,(SELECT id FROM category WHERE name = 'EMI'),      'HDFC Bank',       'Bike EMI',            'NET_BANKING', CURRENT_DATE - INTERVAL '8 days'),
+    (600.00, (SELECT id FROM category WHERE name = 'Medical'),   'Apollo Pharmacy', 'Monthly medicines',   'UPI',         CURRENT_DATE - INTERVAL '6 days'),
+    (450.00, (SELECT id FROM category WHERE name = 'Entertainment'),'PVR Cinemas',  'Movie tickets',       'UPI',         CURRENT_DATE - INTERVAL '4 days'),
+    (999.00, (SELECT id FROM category WHERE name = 'Bills'),     'Airtel',          'Mobile recharge',     'UPI',         CURRENT_DATE - INTERVAL '2 days'),
+    (5000.00,(SELECT id FROM category WHERE name = 'Investment'),'Zerodha',         'SIP investment',      'NET_BANKING', CURRENT_DATE - INTERVAL '1 days'),
+    (75.00,  (SELECT id FROM category WHERE name = 'Others'),    NULL,              'Misc expense',        'CASH',        CURRENT_DATE) [22007-224]
+Location   : db/migration/V4__seed_sample_expenses.sql (C:\Projects\Expense-tracking\Expense-tracker\acceptance-tests\file:\C:\Users\Pavan\.m2\repository\com\expensetracker\expense-tracker-backend\1.0.0\expense-tracker-backend-1.0.0.jar!\db\migration\V4__seed_sample_expenses.sql)
+Line       : 4
+Statement  : -- Sample seed data for local development / demo purposes.
+-- Safe to run in prod too (small, harmless dataset); remove if not desired.
+
+INSERT INTO expense (amount, category_id, merchant, description, payment_mode, expense_date) VALUES
+    (120.00, (SELECT id FROM category WHERE name = 'Food'),      'Cafe Coffee Day', 'Breakfast',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (250.00, (SELECT id FROM category WHERE name = 'Food'),      'Domino''s',       'Lunch',               'CREDIT_CARD', CURRENT_DATE - INTERVAL '12 days'),
+    (1800.00,(SELECT id FROM category WHERE name = 'Fuel'),      'Indian Oil',      'Bike fuel',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (180.00, (SELECT id FROM category WHERE name = 'Food'),      'Starbucks',       'Coffee',              'UPI',         CURRENT_DATE - INTERVAL '11 days'),
+    (2500.00,(SELECT id FROM category WHERE name = 'Shopping'),  'Amazon',          'Headphones',          'CREDIT_CARD', CURRENT_DATE - INTERVAL '11 days'),
+    (3200.00,(SELECT id FROM category WHERE name = 'Groceries'), 'Big Bazaar',      'Monthly groceries',   'DEBIT_CARD',  CURRENT_DATE - INTERVAL '9 days'),
+    (15000.00,(SELECT id FROM category WHERE name = 'EMI'),      'HDFC Bank',       'Bike EMI',            'NET_BANKING', CURRENT_DATE - INTERVAL '8 days'),
+    (600.00, (SELECT id FROM category WHERE name = 'Medical'),   'Apollo Pharmacy', 'Monthly medicines',   'UPI',         CURRENT_DATE - INTERVAL '6 days'),
+    (450.00, (SELECT id FROM category WHERE name = 'Entertainment'),'PVR Cinemas',  'Movie tickets',       'UPI',         CURRENT_DATE - INTERVAL '4 days'),
+    (999.00, (SELECT id FROM category WHERE name = 'Bills'),     'Airtel',          'Mobile recharge',     'UPI',         CURRENT_DATE - INTERVAL '2 days'),
+    (5000.00,(SELECT id FROM category WHERE name = 'Investment'),'Zerodha',         'SIP investment',      'NET_BANKING', CURRENT_DATE - INTERVAL '1 days'),
+    (75.00,  (SELECT id FROM category WHERE name = 'Others'),    NULL,              'Misc expense',        'CASH',        CURRENT_DATE)
+
+	at org.flywaydb.core.internal.command.DbMigrate.doMigrateGroup(DbMigrate.java:382) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.command.DbMigrate.lambda$applyMigrations$1(DbMigrate.java:272) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.jdbc.TransactionalExecutionTemplate.execute(TransactionalExecutionTemplate.java:55) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.command.DbMigrate.applyMigrations(DbMigrate.java:271) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.command.DbMigrate.migrateGroup(DbMigrate.java:244) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.command.DbMigrate.lambda$migrateAll$0(DbMigrate.java:139) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.jdbc.TableLockingExecutionTemplate$1.call(TableLockingExecutionTemplate.java:36) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.jdbc.TransactionalExecutionTemplate.execute(TransactionalExecutionTemplate.java:55) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.jdbc.TableLockingExecutionTemplate.execute(TableLockingExecutionTemplate.java:31) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.database.base.Connection.lock(Connection.java:102) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory.lock(JdbcTableSchemaHistory.java:145) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.command.DbMigrate.migrateAll(DbMigrate.java:139) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.command.DbMigrate.migrate(DbMigrate.java:97) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.Flyway.lambda$migrate$0(Flyway.java:202) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.FlywayExecutor.execute(FlywayExecutor.java:205) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.Flyway.migrate(Flyway.java:147) ~[flyway-core-10.10.0.jar:na]
+	at org.springframework.boot.autoconfigure.flyway.FlywayMigrationInitializer.afterPropertiesSet(FlywayMigrationInitializer.java:66) ~[spring-boot-autoconfigure-3.3.4.jar:3.3.4]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1853) ~[spring-beans-6.1.13.jar:6.1.13]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1802) ~[spring-beans-6.1.13.jar:6.1.13]
+	... 101 common frames omitted
+Caused by: org.flywaydb.core.internal.sqlscript.FlywaySqlScriptException: Migration V4__seed_sample_expenses.sql failed
+---------------------------------------------
+SQL State  : 22007
+Error Code : 22007
+Message    : Cannot parse "INTERVAL" constant "12 days"; SQL statement:
+-- Sample seed data for local development / demo purposes.
+-- Safe to run in prod too (small, harmless dataset); remove if not desired.
+
+INSERT INTO expense (amount, category_id, merchant, description, payment_mode, expense_date) VALUES
+    (120.00, (SELECT id FROM category WHERE name = 'Food'),      'Cafe Coffee Day', 'Breakfast',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (250.00, (SELECT id FROM category WHERE name = 'Food'),      'Domino''s',       'Lunch',               'CREDIT_CARD', CURRENT_DATE - INTERVAL '12 days'),
+    (1800.00,(SELECT id FROM category WHERE name = 'Fuel'),      'Indian Oil',      'Bike fuel',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (180.00, (SELECT id FROM category WHERE name = 'Food'),      'Starbucks',       'Coffee',              'UPI',         CURRENT_DATE - INTERVAL '11 days'),
+    (2500.00,(SELECT id FROM category WHERE name = 'Shopping'),  'Amazon',          'Headphones',          'CREDIT_CARD', CURRENT_DATE - INTERVAL '11 days'),
+    (3200.00,(SELECT id FROM category WHERE name = 'Groceries'), 'Big Bazaar',      'Monthly groceries',   'DEBIT_CARD',  CURRENT_DATE - INTERVAL '9 days'),
+    (15000.00,(SELECT id FROM category WHERE name = 'EMI'),      'HDFC Bank',       'Bike EMI',            'NET_BANKING', CURRENT_DATE - INTERVAL '8 days'),
+    (600.00, (SELECT id FROM category WHERE name = 'Medical'),   'Apollo Pharmacy', 'Monthly medicines',   'UPI',         CURRENT_DATE - INTERVAL '6 days'),
+    (450.00, (SELECT id FROM category WHERE name = 'Entertainment'),'PVR Cinemas',  'Movie tickets',       'UPI',         CURRENT_DATE - INTERVAL '4 days'),
+    (999.00, (SELECT id FROM category WHERE name = 'Bills'),     'Airtel',          'Mobile recharge',     'UPI',         CURRENT_DATE - INTERVAL '2 days'),
+    (5000.00,(SELECT id FROM category WHERE name = 'Investment'),'Zerodha',         'SIP investment',      'NET_BANKING', CURRENT_DATE - INTERVAL '1 days'),
+    (75.00,  (SELECT id FROM category WHERE name = 'Others'),    NULL,              'Misc expense',        'CASH',        CURRENT_DATE) [22007-224]
+Location   : db/migration/V4__seed_sample_expenses.sql (C:\Projects\Expense-tracking\Expense-tracker\acceptance-tests\file:\C:\Users\Pavan\.m2\repository\com\expensetracker\expense-tracker-backend\1.0.0\expense-tracker-backend-1.0.0.jar!\db\migration\V4__seed_sample_expenses.sql)
+Line       : 4
+Statement  : -- Sample seed data for local development / demo purposes.
+-- Safe to run in prod too (small, harmless dataset); remove if not desired.
+
+INSERT INTO expense (amount, category_id, merchant, description, payment_mode, expense_date) VALUES
+    (120.00, (SELECT id FROM category WHERE name = 'Food'),      'Cafe Coffee Day', 'Breakfast',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (250.00, (SELECT id FROM category WHERE name = 'Food'),      'Domino''s',       'Lunch',               'CREDIT_CARD', CURRENT_DATE - INTERVAL '12 days'),
+    (1800.00,(SELECT id FROM category WHERE name = 'Fuel'),      'Indian Oil',      'Bike fuel',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (180.00, (SELECT id FROM category WHERE name = 'Food'),      'Starbucks',       'Coffee',              'UPI',         CURRENT_DATE - INTERVAL '11 days'),
+    (2500.00,(SELECT id FROM category WHERE name = 'Shopping'),  'Amazon',          'Headphones',          'CREDIT_CARD', CURRENT_DATE - INTERVAL '11 days'),
+    (3200.00,(SELECT id FROM category WHERE name = 'Groceries'), 'Big Bazaar',      'Monthly groceries',   'DEBIT_CARD',  CURRENT_DATE - INTERVAL '9 days'),
+    (15000.00,(SELECT id FROM category WHERE name = 'EMI'),      'HDFC Bank',       'Bike EMI',            'NET_BANKING', CURRENT_DATE - INTERVAL '8 days'),
+    (600.00, (SELECT id FROM category WHERE name = 'Medical'),   'Apollo Pharmacy', 'Monthly medicines',   'UPI',         CURRENT_DATE - INTERVAL '6 days'),
+    (450.00, (SELECT id FROM category WHERE name = 'Entertainment'),'PVR Cinemas',  'Movie tickets',       'UPI',         CURRENT_DATE - INTERVAL '4 days'),
+    (999.00, (SELECT id FROM category WHERE name = 'Bills'),     'Airtel',          'Mobile recharge',     'UPI',         CURRENT_DATE - INTERVAL '2 days'),
+    (5000.00,(SELECT id FROM category WHERE name = 'Investment'),'Zerodha',         'SIP investment',      'NET_BANKING', CURRENT_DATE - INTERVAL '1 days'),
+    (75.00,  (SELECT id FROM category WHERE name = 'Others'),    NULL,              'Misc expense',        'CASH',        CURRENT_DATE)
+
+	at org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor.handleException(DefaultSqlScriptExecutor.java:252) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor.executeStatement(DefaultSqlScriptExecutor.java:214) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor.execute(DefaultSqlScriptExecutor.java:133) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.resolver.sql.SqlMigrationExecutor.executeOnce(SqlMigrationExecutor.java:65) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.resolver.sql.SqlMigrationExecutor.lambda$execute$0(SqlMigrationExecutor.java:57) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.database.DefaultExecutionStrategy.execute(DefaultExecutionStrategy.java:27) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.resolver.sql.SqlMigrationExecutor.execute(SqlMigrationExecutor.java:56) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.command.DbMigrate.doMigrateGroup(DbMigrate.java:374) ~[flyway-core-10.10.0.jar:na]
+	... 119 common frames omitted
+Caused by: org.h2.jdbc.JdbcSQLDataException: Cannot parse "INTERVAL" constant "12 days"; SQL statement:
+-- Sample seed data for local development / demo purposes.
+-- Safe to run in prod too (small, harmless dataset); remove if not desired.
+
+INSERT INTO expense (amount, category_id, merchant, description, payment_mode, expense_date) VALUES
+    (120.00, (SELECT id FROM category WHERE name = 'Food'),      'Cafe Coffee Day', 'Breakfast',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (250.00, (SELECT id FROM category WHERE name = 'Food'),      'Domino''s',       'Lunch',               'CREDIT_CARD', CURRENT_DATE - INTERVAL '12 days'),
+    (1800.00,(SELECT id FROM category WHERE name = 'Fuel'),      'Indian Oil',      'Bike fuel',           'UPI',         CURRENT_DATE - INTERVAL '12 days'),
+    (180.00, (SELECT id FROM category WHERE name = 'Food'),      'Starbucks',       'Coffee',              'UPI',         CURRENT_DATE - INTERVAL '11 days'),
+    (2500.00,(SELECT id FROM category WHERE name = 'Shopping'),  'Amazon',          'Headphones',          'CREDIT_CARD', CURRENT_DATE - INTERVAL '11 days'),
+    (3200.00,(SELECT id FROM category WHERE name = 'Groceries'), 'Big Bazaar',      'Monthly groceries',   'DEBIT_CARD',  CURRENT_DATE - INTERVAL '9 days'),
+    (15000.00,(SELECT id FROM category WHERE name = 'EMI'),      'HDFC Bank',       'Bike EMI',            'NET_BANKING', CURRENT_DATE - INTERVAL '8 days'),
+    (600.00, (SELECT id FROM category WHERE name = 'Medical'),   'Apollo Pharmacy', 'Monthly medicines',   'UPI',         CURRENT_DATE - INTERVAL '6 days'),
+    (450.00, (SELECT id FROM category WHERE name = 'Entertainment'),'PVR Cinemas',  'Movie tickets',       'UPI',         CURRENT_DATE - INTERVAL '4 days'),
+    (999.00, (SELECT id FROM category WHERE name = 'Bills'),     'Airtel',          'Mobile recharge',     'UPI',         CURRENT_DATE - INTERVAL '2 days'),
+    (5000.00,(SELECT id FROM category WHERE name = 'Investment'),'Zerodha',         'SIP investment',      'NET_BANKING', CURRENT_DATE - INTERVAL '1 days'),
+    (75.00,  (SELECT id FROM category WHERE name = 'Others'),    NULL,              'Misc expense',        'CASH',        CURRENT_DATE) [22007-224]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:518) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.message.DbException.get(DbException.java:212) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.command.Parser.readInterval(Parser.java:5374) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.command.Parser.readTermWithoutIdentifier(Parser.java:4970) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.command.Parser.readTerm(Parser.java:4834) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.command.Parser.readFactor(Parser.java:3337) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.command.Parser.readSum(Parser.java:3329) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.command.Parser.readConcat(Parser.java:3289) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.command.Parser.readCondition(Parser.java:3079) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.command.Parser.readExpression(Parser.java:2999) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.command.Parser.readExpressionOrDefault(Parser.java:2985) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.command.Parser.parseValuesForCommand(Parser.java:1704) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.command.Parser.parseInsert(Parser.java:1569) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.command.Parser.parsePrepared(Parser.java:719) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.command.Parser.parse(Parser.java:592) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.command.Parser.parse(Parser.java:564) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.command.Parser.prepareCommand(Parser.java:483) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.engine.SessionLocal.prepareLocal(SessionLocal.java:639) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.engine.SessionLocal.prepareCommand(SessionLocal.java:559) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.jdbc.JdbcConnection.prepareCommand(JdbcConnection.java:1166) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.jdbc.JdbcStatement.executeInternal(JdbcStatement.java:245) ~[h2-2.2.224.jar:2.2.224]
+	at org.h2.jdbc.JdbcStatement.execute(JdbcStatement.java:231) ~[h2-2.2.224.jar:2.2.224]
+	at com.zaxxer.hikari.pool.ProxyStatement.execute(ProxyStatement.java:94) ~[HikariCP-5.1.0.jar:na]
+	at com.zaxxer.hikari.pool.HikariProxyStatement.execute(HikariProxyStatement.java) ~[HikariCP-5.1.0.jar:na]
+	at org.flywaydb.core.internal.jdbc.JdbcTemplate.executeStatement(JdbcTemplate.java:210) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.sqlscript.ParsedSqlStatement.execute(ParsedSqlStatement.java:89) ~[flyway-core-10.10.0.jar:na]
+	at org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor.executeStatement(DefaultSqlScriptExecutor.java:206) ~[flyway-core-10.10.0.jar:na]
+	... 125 common frames omitted
+Caused by: java.lang.NullPointerException: Cannot invoke "org.h2.value.TypeInfo.getValueType()" because "<local3>" is null
+	at org.h2.command.Parser.readInterval(Parser.java:5368) ~[h2-2.2.224.jar:2.2.224]
+	... 149 common frames omitted
+

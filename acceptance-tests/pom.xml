@@ -102,6 +102,12 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Database -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- Testcontainers -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

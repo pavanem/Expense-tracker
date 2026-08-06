@@ -37,7 +37,7 @@ public class ExpenseSteps {
                 .header("Authorization", "Bearer " + token)
                 .get("/api/categories");
 
-        List<Map<String, Object>> categories = res.jsonPath().getList("content");
+        List<Map<String, Object>> categories = res.jsonPath().getList("");
         if (categories != null && !categories.isEmpty()) {
             for (Map<String, Object> cat : categories) {
                 if (name.equalsIgnoreCase((String) cat.get("name"))) {
@@ -60,11 +60,16 @@ public class ExpenseSteps {
 
     @Given("an authenticated user {string} exists with password {string}")
     public void authenticated_user_exists(String username, String password) {
-        // Try registering first
+        // If we already have a token for this user from a previous step, just reuse it
+        if (testContext.getUserToken(username) != null) {
+            testContext.setToken(testContext.getUserToken(username));
+            return;
+        }
+
+        // 1) Try self-registration (only works for the very first user)
         Map<String, String> regBody = Map.of(
                 "username", username,
-                "password", password,
-                "fullName", username
+                "password", password
         );
         Response regRes = RestAssured.given()
                 .baseUri(getBaseUrl())
@@ -72,23 +77,53 @@ public class ExpenseSteps {
                 .body(regBody)
                 .post("/api/auth/register");
 
-        String token;
         if (regRes.getStatusCode() == 201 || regRes.getStatusCode() == 200) {
-            token = regRes.jsonPath().getString("token");
-        } else {
-            // Login
-            Map<String, String> loginBody = Map.of(
-                    "username", username,
-                    "password", password
-            );
-            Response loginRes = RestAssured.given()
-                    .baseUri(getBaseUrl())
-                    .contentType(ContentType.JSON)
-                    .body(loginBody)
-                    .post("/api/auth/login");
-            token = loginRes.jsonPath().getString("token");
+            String token = regRes.jsonPath().getString("accessToken");
+            testContext.setToken(token);
+            testContext.setUserToken(username, token);
+            // Store the first user's admin token for creating subsequent users
+            testContext.set("adminToken", token);
+            return;
         }
 
+        // 2) Registration is closed — try to log in (user may already exist from a prior scenario)
+        Map<String, String> loginBody = Map.of(
+                "username", username,
+                "password", password
+        );
+        Response loginRes = RestAssured.given()
+                .baseUri(getBaseUrl())
+                .contentType(ContentType.JSON)
+                .body(loginBody)
+                .post("/api/auth/login");
+
+        if (loginRes.getStatusCode() == 200) {
+            String token = loginRes.jsonPath().getString("accessToken");
+            testContext.setToken(token);
+            testContext.setUserToken(username, token);
+            return;
+        }
+
+        // 3) User doesn't exist yet — create via admin API, then log in
+        String adminToken = testContext.get("adminToken");
+        Map<String, String> createBody = Map.of(
+                "username", username,
+                "password", password
+        );
+        RestAssured.given()
+                .baseUri(getBaseUrl())
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(ContentType.JSON)
+                .body(createBody)
+                .post("/api/admin/users");
+
+        // Now log in as the newly created user
+        Response newLoginRes = RestAssured.given()
+                .baseUri(getBaseUrl())
+                .contentType(ContentType.JSON)
+                .body(loginBody)
+                .post("/api/auth/login");
+        String token = newLoginRes.jsonPath().getString("accessToken");
         testContext.setToken(token);
         testContext.setUserToken(username, token);
     }
@@ -102,7 +137,7 @@ public class ExpenseSteps {
                 "merchant", merchant,
                 "paymentMode", paymentMode,
                 "categoryId", categoryId,
-                "notes", "Acceptance test expense"
+                "description", "Acceptance test expense"
         );
 
         Response response = RestAssured.given()

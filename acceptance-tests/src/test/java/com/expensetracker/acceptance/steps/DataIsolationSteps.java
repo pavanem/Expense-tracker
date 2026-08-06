@@ -38,7 +38,7 @@ public class DataIsolationSteps {
                 .baseUri(getBaseUrl())
                 .header("Authorization", "Bearer " + token)
                 .get("/api/categories");
-        List<Map<String, Object>> categories = catRes.jsonPath().getList("content");
+        List<Map<String, Object>> categories = catRes.jsonPath().getList("");
         Long categoryId = ((Number) categories.get(0).get("id")).longValue();
 
         Map<String, Object> body = Map.of(
@@ -65,7 +65,7 @@ public class DataIsolationSteps {
                 .baseUri(getBaseUrl())
                 .header("Authorization", "Bearer " + token)
                 .get("/api/income-categories");
-        List<Map<String, Object>> categories = catRes.jsonPath().getList("content");
+        List<Map<String, Object>> categories = catRes.jsonPath().getList("");
         Long categoryId = ((Number) categories.get(0).get("id")).longValue();
 
         Map<String, Object> body = Map.of(
@@ -80,7 +80,7 @@ public class DataIsolationSteps {
                 .header("Authorization", "Bearer " + token)
                 .contentType(ContentType.JSON)
                 .body(body)
-                .post("/api/income");
+                .post("/api/incomes");
     }
 
     @Then("user {string} should see {int} expenses in their expense list")
@@ -102,7 +102,7 @@ public class DataIsolationSteps {
         Response response = RestAssured.given()
                 .baseUri(getBaseUrl())
                 .header("Authorization", "Bearer " + token)
-                .get("/api/income");
+                .get("/api/incomes");
 
         assertThat(response.getStatusCode(), is(200));
         List<Object> content = response.jsonPath().getList("content");

@@ -4,6 +4,8 @@ import com.expensetracker.entity.Category;
 import com.expensetracker.entity.CategoryStatus;
 import com.expensetracker.entity.Expense;
 import com.expensetracker.entity.PaymentMode;
+import com.expensetracker.entity.User;
+import com.expensetracker.entity.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,11 +31,22 @@ class ExpenseRepositoryTest {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     private Category food;
     private Category travel;
+    private User user;
 
     @BeforeEach
     void setUp() {
+        user = userRepository.save(User.builder()
+                .username("repo_test_user")
+                .passwordHash("hashedpass")
+                .role(UserRole.USER)
+                .enabled(true)
+                .build());
+
         food = categoryRepository.save(Category.builder()
                 .name("Food").color("#FF7043").displayOrder(1).status(CategoryStatus.ACTIVE).build());
         travel = categoryRepository.save(Category.builder()
@@ -46,6 +59,7 @@ class ExpenseRepositoryTest {
 
     private Expense expense(BigDecimal amount, Category category, String merchant, PaymentMode mode, LocalDate date) {
         return Expense.builder()
+                .user(user)
                 .amount(amount)
                 .category(category)
                 .merchant(merchant)

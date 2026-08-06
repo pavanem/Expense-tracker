@@ -4,7 +4,7 @@ Feature: Expense Management and Validation Rules
     Given an authenticated user "expense_tester" exists with password "Password123!"
 
   Scenario: Create expense with valid data
-    When the user creates an expense with amount 1500.50, merchant "Supermarket", payment mode "CARD", and category "Food"
+    When the user creates an expense with amount 1500.50, merchant "Supermarket", payment mode "CREDIT_CARD", and category "Food"
     Then the response status code should be 201
     And the expense response should contain merchant "Supermarket" and amount 1500.50
 

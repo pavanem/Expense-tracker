@@ -51,9 +51,10 @@ public class AuthSteps {
 
         testContext.setLastResponse(response);
         if (response.getStatusCode() == 201 || response.getStatusCode() == 200) {
-            String token = response.jsonPath().getString("token");
+            String token = response.jsonPath().getString("accessToken");
             testContext.setToken(token);
             testContext.setUserToken(username, token);
+            testContext.set("adminToken", token);
         }
     }
 
@@ -73,7 +74,7 @@ public class AuthSteps {
 
         testContext.setLastResponse(response);
         if (response.getStatusCode() == 200) {
-            String token = response.jsonPath().getString("token");
+            String token = response.jsonPath().getString("accessToken");
             testContext.setToken(token);
             testContext.setUserToken(username, token);
         }
@@ -95,7 +96,7 @@ public class AuthSteps {
 
     @Then("the response should contain an access token")
     public void response_should_contain_access_token() {
-        String token = testContext.getLastResponse().jsonPath().getString("token");
+        String token = testContext.getLastResponse().jsonPath().getString("accessToken");
         assertThat(token, notNullValue());
         assertThat(token, not(emptyString()));
     }

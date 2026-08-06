@@ -35,7 +35,7 @@ public class IncomeSteps {
                 .header("Authorization", "Bearer " + token)
                 .get("/api/income-categories");
 
-        List<Map<String, Object>> categories = res.jsonPath().getList("content");
+        List<Map<String, Object>> categories = res.jsonPath().getList("");
         if (categories != null && !categories.isEmpty()) {
             for (Map<String, Object> cat : categories) {
                 if (name.equalsIgnoreCase((String) cat.get("name"))) {
@@ -64,7 +64,7 @@ public class IncomeSteps {
                 "incomeDate", LocalDate.now().toString(),
                 "source", source,
                 "incomeCategoryId", categoryId,
-                "notes", "Acceptance test income"
+                "description", "Acceptance test income"
         );
 
         Response response = RestAssured.given()
@@ -72,7 +72,7 @@ public class IncomeSteps {
                 .header("Authorization", "Bearer " + testContext.getToken())
                 .contentType(ContentType.JSON)
                 .body(body)
-                .post("/api/income");
+                .post("/api/incomes");
 
         testContext.setLastResponse(response);
     }
@@ -94,7 +94,7 @@ public class IncomeSteps {
                 .header("Authorization", "Bearer " + testContext.getToken())
                 .contentType(ContentType.JSON)
                 .body(body)
-                .post("/api/income");
+                .post("/api/incomes");
 
         testContext.setLastResponse(response);
     }
@@ -104,7 +104,7 @@ public class IncomeSteps {
         Response response = RestAssured.given()
                 .baseUri(getBaseUrl())
                 .header("Authorization", "Bearer " + testContext.getToken())
-                .get("/api/income");
+                .get("/api/incomes");
 
         testContext.setLastResponse(response);
     }

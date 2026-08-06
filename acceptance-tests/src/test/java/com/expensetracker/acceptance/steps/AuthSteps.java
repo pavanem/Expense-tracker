@@ -80,6 +80,11 @@ public class AuthSteps {
         }
     }
 
+    @When("the user logs in with username {string} and password {string}")
+    public void the_user_logs_in(String username, String password) {
+        a_user_logs_in(username, password);
+    }
+
     @When("an unauthenticated request is made to {string}")
     public void unauthenticated_request_to(String endpoint) {
         Response response = RestAssured.given()

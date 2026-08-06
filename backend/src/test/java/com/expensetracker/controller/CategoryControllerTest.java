@@ -23,6 +23,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.expensetracker.security.JwtService;
+
 @WebMvcTest(controllers = CategoryController.class)
 @AutoConfigureMockMvc(addFilters = false) // security disabled in prod config too; not the focus of this slice
 class CategoryControllerTest {
@@ -32,6 +34,9 @@ class CategoryControllerTest {
 
     @MockBean
     private CategoryService categoryService;
+
+    @MockBean
+    private JwtService jwtService;
 
     @Test
     void create_returns201_withValidPayload() throws Exception {

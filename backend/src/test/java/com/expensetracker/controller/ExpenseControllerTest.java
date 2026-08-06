@@ -24,6 +24,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.expensetracker.security.JwtService;
+
 @WebMvcTest(controllers = ExpenseController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class ExpenseControllerTest {
@@ -33,6 +35,9 @@ class ExpenseControllerTest {
 
     @MockBean
     private ExpenseService expenseService;
+
+    @MockBean
+    private JwtService jwtService;
 
     private ExpenseRequest validRequest() {
         return ExpenseRequest.builder()
@@ -79,6 +84,9 @@ class ExpenseControllerTest {
                 .paymentMode(PaymentMode.CASH)
                 .expenseDate(LocalDate.now().plusDays(46))
                 .build();
+
+        when(expenseService.create(any(), any()))
+                .thenThrow(new com.expensetracker.exception.InvalidRequestException("Expense date cannot be more than 45 days in the future"));
 
         mockMvc.perform(post("/api/expenses")
                         .contentType("application/json")

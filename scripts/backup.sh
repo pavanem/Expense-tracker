@@ -61,6 +61,8 @@ if [[ -f "$ENV_FILE" ]]; then
     if [[ "$line" =~ ^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*)[[:space:]]*=[[:space:]]*(.*)[[:space:]]*$ ]]; then
       _key="${BASH_REMATCH[1]}"
       _val="${BASH_REMATCH[2]}"
+      # Strip trailing carriage return (handles Windows CRLF line endings)
+      _val="${_val%$'\r'}"
       # Strip matching surrounding quotes if present
       if [[ "$_val" =~ ^\"(.*)\"$ ]] || [[ "$_val" =~ ^\'(.*)\'$ ]]; then
         _val="${BASH_REMATCH[1]}"

@@ -37,7 +37,10 @@ const AuthService = {
    * apiClient's own refresh-retry logic — this *is* the refresh call.
    */
   async bootstrapSession() {
-    const { data } = await axios.post(`${BASE_URL}/auth/refresh`, null, { withCredentials: true });
+    const { data } = await axios.post(`${BASE_URL}/auth/refresh`, {}, {
+      withCredentials: true,
+      headers: { 'Content-Type': 'application/json' },
+    });
     return applyAuthResponse(data);
   },
 

@@ -58,6 +58,25 @@ public class AuthSteps {
         }
     }
 
+    private String extractRefreshTokenCookie(Response response) {
+        String cookie = response.getCookie("refresh_token");
+        if (cookie != null && !cookie.isBlank()) {
+            return cookie;
+        }
+        var setCookieHeaders = response.getHeaders().getList("Set-Cookie");
+        if (setCookieHeaders != null) {
+            for (var header : setCookieHeaders) {
+                String val = header.getValue();
+                if (val != null && val.contains("refresh_token=")) {
+                    int start = val.indexOf("refresh_token=") + "refresh_token=".length();
+                    int end = val.indexOf(";", start);
+                    return end != -1 ? val.substring(start, end).trim() : val.substring(start).trim();
+                }
+            }
+        }
+        return null;
+    }
+
     @When("a user logs in with username {string} and password {string}")
     public void a_user_logs_in(String username, String password) {
         Map<String, String> body = Map.of(
@@ -77,7 +96,7 @@ public class AuthSteps {
             String token = response.jsonPath().getString("accessToken");
             testContext.setToken(token);
             testContext.setUserToken(username, token);
-            String cookie = response.getCookie("refreshToken");
+            String cookie = extractRefreshTokenCookie(response);
             if (cookie != null) {
                 testContext.set("refreshTokenCookie", cookie);
             }
@@ -89,13 +108,17 @@ public class AuthSteps {
         String cookie = testContext.get("refreshTokenCookie");
         var request = RestAssured.given().baseUri(getBaseUrl());
         if (cookie != null) {
-            request.cookie("refreshToken", cookie);
+            request.header("Cookie", "refresh_token=" + cookie);
         }
         Response response = request.post("/api/auth/refresh");
         testContext.setLastResponse(response);
         if (response.getStatusCode() == 200) {
             String token = response.jsonPath().getString("accessToken");
             testContext.setToken(token);
+            String newCookie = extractRefreshTokenCookie(response);
+            if (newCookie != null) {
+                testContext.set("refreshTokenCookie", newCookie);
+            }
         }
     }
 

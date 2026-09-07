@@ -9,11 +9,13 @@ import com.expensetracker.dto.RegisterRequest;
 import com.expensetracker.exception.InvalidRefreshTokenException;
 import com.expensetracker.security.AuthenticatedUser;
 import com.expensetracker.service.AuthService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -27,6 +29,7 @@ import java.time.LocalDateTime;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Auth", description = "Registration, login, token refresh, and session management")
 public class AuthController {
 
@@ -36,6 +39,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtProperties jwtProperties;
+    private final ObjectMapper objectMapper;
 
     @GetMapping("/registration-status")
     @Operation(summary = "Whether registration is still open (true only until the first account is created)")
@@ -76,13 +80,12 @@ public class AuthController {
             + "Mobile clients may pass {\"refreshToken\":\"...\"}  in the request body instead of a cookie.")
     public ResponseEntity<AuthResponse> refresh(
             @CookieValue(name = REFRESH_COOKIE_NAME, required = false) String cookieToken,
-            @RequestBody(required = false) MobileRefreshRequest body,
             HttpServletRequest httpRequest) {
 
-        // Prefer the cookie (web flow); fall back to the body field (mobile flow).
+        // Prefer the cookie (web flow); fall back to the JSON body field (mobile flow).
         String refreshToken = (cookieToken != null && !cookieToken.isBlank())
                 ? cookieToken
-                : (body != null ? body.refreshToken() : null);
+                : extractTokenFromBody(httpRequest);
 
         if (refreshToken == null || refreshToken.isBlank()) {
             throw new InvalidRefreshTokenException("No refresh token provided");
@@ -104,10 +107,10 @@ public class AuthController {
             + "Mobile clients may pass {\"refreshToken\":\"...\"}  in the request body.")
     public ResponseEntity<Void> logout(
             @CookieValue(name = REFRESH_COOKIE_NAME, required = false) String cookieToken,
-            @RequestBody(required = false) MobileRefreshRequest body) {
+            HttpServletRequest httpRequest) {
         String refreshToken = (cookieToken != null && !cookieToken.isBlank())
                 ? cookieToken
-                : (body != null ? body.refreshToken() : null);
+                : extractTokenFromBody(httpRequest);
         if (refreshToken != null && !refreshToken.isBlank()) {
             authService.logout(refreshToken);
         }
@@ -175,5 +178,26 @@ public class AuthController {
     private String deviceLabelFrom(HttpServletRequest request) {
         String userAgent = request.getHeader("User-Agent");
         return (userAgent == null || userAgent.isBlank()) ? "Unknown device" : userAgent;
+    }
+
+    /**
+     * Safely reads the refresh token from an incoming JSON body without using
+     * Spring's {@code @RequestBody} parameter annotation on the controller method.
+     * This ensures that web requests (which provide a cookie and no body or an
+     * unsupported Content-Type) never trigger {@code HttpMediaTypeNotSupportedException}.
+     */
+    private String extractTokenFromBody(HttpServletRequest request) {
+        String contentType = request.getContentType();
+        if (contentType != null && contentType.toLowerCase().contains("application/json")) {
+            try {
+                MobileRefreshRequest body = objectMapper.readValue(request.getInputStream(), MobileRefreshRequest.class);
+                return (body != null && body.refreshToken() != null && !body.refreshToken().isBlank())
+                        ? body.refreshToken()
+                        : null;
+            } catch (Exception e) {
+                log.debug("Could not parse MobileRefreshRequest from request body: {}", e.getMessage());
+            }
+        }
+        return null;
     }
 }

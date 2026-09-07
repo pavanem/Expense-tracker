@@ -96,6 +96,13 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.NOT_FOUND, "The requested resource was not found", request, null);
     }
 
+    @ExceptionHandler(org.springframework.web.HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMediaTypeNotSupported(
+            org.springframework.web.HttpMediaTypeNotSupportedException ex, HttpServletRequest request) {
+        log.warn("Unsupported media type on {}: {}", request.getRequestURI(), ex.getMessage());
+        return build(HttpStatus.UNSUPPORTED_MEDIA_TYPE, ex.getMessage(), request, null);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex, HttpServletRequest request) {
         log.error("Unhandled exception on {}", request.getRequestURI(), ex);

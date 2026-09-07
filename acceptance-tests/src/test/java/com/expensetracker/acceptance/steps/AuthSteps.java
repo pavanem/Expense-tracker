@@ -77,7 +77,34 @@ public class AuthSteps {
             String token = response.jsonPath().getString("accessToken");
             testContext.setToken(token);
             testContext.setUserToken(username, token);
+            String cookie = response.getCookie("refreshToken");
+            if (cookie != null) {
+                testContext.set("refreshTokenCookie", cookie);
+            }
         }
+    }
+
+    @When("the user refreshes the session token via cookie")
+    public void the_user_refreshes_the_session_token_via_cookie() {
+        String cookie = testContext.get("refreshTokenCookie");
+        var request = RestAssured.given().baseUri(getBaseUrl());
+        if (cookie != null) {
+            request.cookie("refreshToken", cookie);
+        }
+        Response response = request.post("/api/auth/refresh");
+        testContext.setLastResponse(response);
+        if (response.getStatusCode() == 200) {
+            String token = response.jsonPath().getString("accessToken");
+            testContext.setToken(token);
+        }
+    }
+
+    @When("an unauthenticated refresh request is made without a cookie or body")
+    public void unauthenticated_refresh_request() {
+        Response response = RestAssured.given()
+                .baseUri(getBaseUrl())
+                .post("/api/auth/refresh");
+        testContext.setLastResponse(response);
     }
 
     @When("the user logs in with username {string} and password {string}")

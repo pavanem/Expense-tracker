@@ -37,7 +37,10 @@ let refreshPromise = null;
 function performRefresh() {
   if (!refreshPromise) {
     refreshPromise = axios
-      .post(`${BASE_URL}/auth/refresh`, null, { withCredentials: true })
+      .post(`${BASE_URL}/auth/refresh`, {}, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'application/json' },
+      })
       .then((response) => {
         setAccessToken(response.data.accessToken);
         return response.data.accessToken;

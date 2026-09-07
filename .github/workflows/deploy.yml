@@ -51,12 +51,13 @@ jobs:
           echo "Maven location: $(which mvn)"
           mvn -version
 
-      - name: Install backend artifact locally
+      - name: Run backend tests and install artifact locally
         run: |
           [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && source "$HOME/.sdkman/bin/sdkman-init.sh" 2>/dev/null || true
           export PATH=$PATH:$HOME/.maven-portable/bin:/usr/local/bin:/usr/bin:/bin:/usr/share/maven/bin:/opt/maven/bin:$HOME/.sdkman/candidates/maven/current/bin
           cd backend
-          mvn clean install -DskipTests --no-transfer-progress
+          mvn clean test --no-transfer-progress
+          mvn install -DskipTests --no-transfer-progress
 
       - name: Run Cucumber acceptance tests
         run: |

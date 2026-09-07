@@ -9,6 +9,7 @@ import { BarChart } from 'react-native-chart-kit';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ReportService from '../../services/reportService';
 import { useNotification } from '../../context/NotificationContext';
+import SyncStatusBanner from '../../components/SyncStatusBanner';
 
 const { width } = Dimensions.get('window');
 
@@ -100,7 +101,9 @@ export default function ReportsScreen() {
   const accentColor = isIncome ? '#10b981' : '#ef4444';
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <>
+      <SyncStatusBanner />
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Filter controls */}
       <Surface style={styles.card} elevation={2}>
         <Text style={styles.cardTitle}>Generate Report</Text>
@@ -339,6 +342,7 @@ export default function ReportsScreen() {
         </Surface>
       )}
     </ScrollView>
+    </>
   );
 }
 

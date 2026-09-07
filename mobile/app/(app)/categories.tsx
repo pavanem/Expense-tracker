@@ -6,6 +6,8 @@ import {
 } from 'react-native-paper';
 import CategoryService from '../../services/categoryService';
 import { useNotification } from '../../context/NotificationContext';
+import SyncStatusBanner from '../../components/SyncStatusBanner';
+import syncService from '../../services/offline/syncService';
 
 export default function CategoriesScreen() {
   const { showNotification } = useNotification();
@@ -19,7 +21,10 @@ export default function CategoriesScreen() {
   const [saving, setSaving] = useState(false);
 
   const load = async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
+    if (isRefresh) {
+      setRefreshing(true);
+      syncService.syncQueue().catch(() => {});
+    }
     try {
       const data = await CategoryService.list();
       setCategories(data);
@@ -85,6 +90,7 @@ export default function CategoriesScreen() {
 
   return (
     <View style={styles.container}>
+      <SyncStatusBanner />
       {loading ? (
         <ActivityIndicator style={{ marginTop: 40 }} color="#6366f1" />
       ) : (

@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import {
   Text, FAB, Portal, Modal, TextInput, Button, Surface,
-  HelperText, ActivityIndicator, IconButton,
+  HelperText, ActivityIndicator, IconButton, Chip,
 } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
@@ -12,6 +12,8 @@ import IncomeService from '../../services/incomeService';
 import IncomeCategoryService from '../../services/incomeCategoryService';
 import { useNotification } from '../../context/NotificationContext';
 import DropdownSelect from '../../components/DropdownSelect';
+import SyncStatusBanner from '../../components/SyncStatusBanner';
+import syncService from '../../services/offline/syncService';
 
 const PAGE_SIZE = 20;
 
@@ -46,7 +48,11 @@ export default function IncomeScreen() {
   };
 
   const loadIncomes = useCallback(async (pageNum = 0, isRefresh = false) => {
-    if (isRefresh) { setRefreshing(true); setPage(0); }
+    if (isRefresh) {
+      setRefreshing(true);
+      setPage(0);
+      syncService.syncQueue().catch(() => {});
+    }
     try {
       const data = searchQuery.trim()
         ? await IncomeService.search(searchQuery, { page: pageNum, size: PAGE_SIZE, sort: 'date,desc' })
@@ -110,12 +116,19 @@ export default function IncomeScreen() {
         source: form.source.trim() || null,
         description: form.description.trim() || null,
       };
+      let result;
       if (editingIncome) {
-        await IncomeService.update(editingIncome.id, payload);
-        showNotification('Income updated', 'success');
+        result = await IncomeService.update(editingIncome.id, payload);
+        showNotification(
+          result?._isPendingSync ? 'Updated locally (Offline). Will sync when connected.' : 'Income updated',
+          'success'
+        );
       } else {
-        await IncomeService.create(payload);
-        showNotification('Income added', 'success');
+        result = await IncomeService.create(payload);
+        showNotification(
+          result?._isPendingSync ? 'Saved locally (Offline). Will sync when connected.' : 'Income added',
+          'success'
+        );
       }
       setModalVisible(false);
       loadIncomes(0, true);
@@ -157,6 +170,11 @@ export default function IncomeScreen() {
                 </Text>
               </View>
             ) : null}
+            {item._isPendingSync || item.id < 0 ? (
+              <Chip compact icon="clock-outline" style={{ backgroundColor: '#b45309', marginLeft: 4 }} textStyle={{ color: '#fff', fontSize: 10 }}>
+                Pending Sync
+              </Chip>
+            ) : null}
           </View>
           <Text style={styles.itemAmount}>+₹{Number(item.amount ?? 0).toFixed(2)}</Text>
         </View>
@@ -188,6 +206,7 @@ export default function IncomeScreen() {
 
   return (
     <View style={styles.container}>
+      <SyncStatusBanner />
       <TextInput
         placeholder="Search income…"
         value={searchQuery}

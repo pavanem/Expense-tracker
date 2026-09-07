@@ -13,6 +13,8 @@ import CategoryService from '../../services/categoryService';
 import { useNotification } from '../../context/NotificationContext';
 import DropdownSelect from '../../components/DropdownSelect';
 import { PAYMENT_MODES, getPaymentModeLabel } from '../../constants/paymentModes';
+import SyncStatusBanner from '../../components/SyncStatusBanner';
+import syncService from '../../services/offline/syncService';
 
 const PAGE_SIZE = 20;
 
@@ -49,7 +51,11 @@ export default function ExpensesScreen() {
   };
 
   const loadExpenses = useCallback(async (pageNum = 0, isRefresh = false) => {
-    if (isRefresh) { setRefreshing(true); setPage(0); }
+    if (isRefresh) {
+      setRefreshing(true);
+      setPage(0);
+      syncService.syncQueue().catch(() => {});
+    }
     try {
       const data = searchQuery.trim()
         ? await ExpenseService.search(searchQuery, { page: pageNum, size: PAGE_SIZE, sort: 'date,desc' })
@@ -116,12 +122,19 @@ export default function ExpensesScreen() {
         merchant: form.merchant.trim() || null,
         description: form.description.trim() || null,
       };
+      let result;
       if (editingExpense) {
-        await ExpenseService.update(editingExpense.id, payload);
-        showNotification('Expense updated', 'success');
+        result = await ExpenseService.update(editingExpense.id, payload);
+        showNotification(
+          result?._isPendingSync ? 'Updated locally (Offline). Will sync when connected.' : 'Expense updated',
+          'success'
+        );
       } else {
-        await ExpenseService.create(payload);
-        showNotification('Expense added', 'success');
+        result = await ExpenseService.create(payload);
+        showNotification(
+          result?._isPendingSync ? 'Saved locally (Offline). Will sync when connected.' : 'Expense added',
+          'success'
+        );
       }
       setModalVisible(false);
       loadExpenses(0, true);
@@ -166,6 +179,11 @@ export default function ExpensesScreen() {
             <Chip compact style={styles.modeChip} textStyle={styles.modeChipText}>
               {getPaymentModeLabel(item.paymentMode)}
             </Chip>
+            {item._isPendingSync || item.id < 0 ? (
+              <Chip compact icon="clock-outline" style={{ backgroundColor: '#b45309', marginLeft: 4 }} textStyle={{ color: '#fff', fontSize: 10 }}>
+                Pending Sync
+              </Chip>
+            ) : null}
           </View>
           <Text style={styles.itemAmount}>-₹{Number(item.amount ?? 0).toFixed(2)}</Text>
         </View>
@@ -197,6 +215,7 @@ export default function ExpensesScreen() {
 
   return (
     <View style={styles.container}>
+      <SyncStatusBanner />
       <TextInput
         placeholder="Search expenses…"
         value={searchQuery}

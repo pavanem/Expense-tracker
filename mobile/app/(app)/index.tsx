@@ -21,6 +21,8 @@ import IncomeCategoryService from '../../services/incomeCategoryService';
 import { useNotification } from '../../context/NotificationContext';
 import DropdownSelect from '../../components/DropdownSelect';
 import { PAYMENT_MODES, getPaymentModeLabel } from '../../constants/paymentModes';
+import SyncStatusBanner from '../../components/SyncStatusBanner';
+import syncService from '../../services/offline/syncService';
 
 const { width } = Dimensions.get('window');
 const CHART_COLORS = ['#6366f1', '#22d3ee', '#f59e0b', '#10b981', '#ef4444', '#a855f7'];
@@ -59,10 +61,13 @@ export default function DashboardScreen() {
   const { showNotification } = useNotification();
 
   const loadData = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
+    if (isRefresh) {
+      setRefreshing(true);
+      syncService.syncQueue().catch(() => {});
+    }
     try {
       const result = await DashboardService.get();
-      setData(result);
+      if (result) setData(result);
     } catch {
       showNotification('Failed to load dashboard', 'error');
     } finally {
@@ -102,8 +107,9 @@ export default function DashboardScreen() {
     setFormError('');
     try {
       const dateFormatted = format(form.date, 'yyyy-MM-dd');
+      let res;
       if (modalType === 'expense') {
-        await ExpenseService.create({
+        res = await ExpenseService.create({
           amount: parsed,
           merchant: form.merchant.trim() || null,
           description: form.description.trim() || null,
@@ -111,16 +117,22 @@ export default function DashboardScreen() {
           expenseDate: dateFormatted,
           paymentMode: form.paymentMode || 'CASH',
         });
-        showNotification('Expense added ✓', 'success');
+        showNotification(
+          res?._isPendingSync ? 'Saved locally (Offline). Will sync when connected.' : 'Expense added ✓',
+          'success'
+        );
       } else {
-        await IncomeService.create({
+        res = await IncomeService.create({
           amount: parsed,
           source: form.source.trim() || null,
           description: form.description.trim() || null,
           incomeCategoryId: form.categoryId ? parseInt(form.categoryId) : null,
           incomeDate: dateFormatted,
         });
-        showNotification('Income added ✓', 'success');
+        showNotification(
+          res?._isPendingSync ? 'Saved locally (Offline). Will sync when connected.' : 'Income added ✓',
+          'success'
+        );
       }
       setModalType(null);
       loadData();
@@ -159,6 +171,7 @@ export default function DashboardScreen() {
 
   return (
     <>
+      <SyncStatusBanner />
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
@@ -246,10 +259,11 @@ export default function DashboardScreen() {
           <Surface style={styles.card} elevation={2}>
             <Text style={styles.cardTitle}>Recent Expenses</Text>
             {recentExpenses.slice(0, 8).map((e: any) => {
-              const title = e.merchant || e.description || e.category?.name || 'Expense';
+              const title = e.merchant || e.description || e.category?.name || e.categoryName || 'Expense';
               const metaParts = [
-                e.category?.name,
-                e.expenseDate,
+                e.category?.name || e.categoryName,
+                e.expenseDate || e.date,
+                e._isPendingSync || e.id < 0 ? '⏳ Pending Sync' : null,
                 e.merchant && e.description ? e.description : null,
               ].filter(Boolean);
 

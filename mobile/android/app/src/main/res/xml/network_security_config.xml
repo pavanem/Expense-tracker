@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Allows cleartext (HTTP) traffic to private/Tailscale IP ranges.
+  HTTPS is always allowed everywhere — this only relaxes cleartext for
+  specific trusted networks (home server via Tailscale).
+-->
+<network-security-config>
+    <!-- Allow HTTP to Tailscale IP range (100.64.0.0/10) -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">100.103.68.49</domain>
+    </domain-config>
+
+    <!-- Also allow HTTP to any 100.x.x.x (full Tailscale CGNAT range) -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">100.64.0.0</domain>
+    </domain-config>
+
+    <!-- Allow HTTP to local network IPs (192.168.x.x) for home WiFi -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">192.168.0.0</domain>
+    </domain-config>
+
+    <!-- Default: disallow cleartext for everything else (public internet) -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
+</network-security-config>

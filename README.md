@@ -64,7 +64,7 @@ Every push to `main` triggers a GitHub Actions workflow on the self-hosted runne
 | Backend | Java 21, Spring Boot 3.3.4, Spring Security (JWT stateless), Spring Data JPA, Spring Validation, MapStruct, Lombok, Flyway, springdoc-openapi |
 | Database | PostgreSQL 16 |
 | Frontend (Web) | React 18, Vite, Material UI, Axios, React Router v6, Recharts |
-| Mobile (Android) | React Native 0.74, Expo SDK 51, Expo Router, React Native Paper, Expo SecureStore, Android Gradle (API 34) |
+| Mobile (Android) | React Native 0.74, Expo SDK 51, Expo Router, React Native Paper, AsyncStorage offline cache & outbox, Expo SecureStore, Android Gradle (API 34) |
 | Infra | Docker, Docker Compose, Nginx, DuckDNS (optional), Let's Encrypt / Certbot (optional) |
 | Testing — unit/slice | JUnit 5, Mockito, AssertJ, `@DataJpaTest`, `@WebMvcTest`, `@SpringBootTest` |
 | Testing — acceptance | Cucumber 7, REST-Assured, Testcontainers (PostgreSQL) |
@@ -504,7 +504,7 @@ Applied automatically on startup:
 
 Features implemented beyond the original SRS v1 scope:
 - JWT authentication with refresh-token rotation and theft detection
-- Native Android Mobile App (React Native / Expo SDK 51 with Tailscale integration & offline debug build)
+- Native Android Mobile App (React Native / Expo SDK 51 with Tailscale & local LAN support, offline-first caching & outbox sync)
 - Per-user data isolation (multi-account support)
 - Income tracking (income entries, income categories, income reports)
 - Admin user management (create, update, reset password, delete)

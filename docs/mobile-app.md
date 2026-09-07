@@ -1,4 +1,4 @@
-﻿# Mobile App Documentation — Expense Tracker
+# Mobile App Documentation — Expense Tracker
 
 A cross-platform mobile application for Expense Tracker built with **React Native (0.74)** and **Expo SDK 51**, featuring a native Android project configured for self-hosted deployments over **Tailscale**.
 
@@ -10,17 +10,24 @@ A cross-platform mobile application for Expense Tracker built with **React Nativ
 flowchart TD
     subgraph MobileApp["Mobile App (React Native / Expo)"]
         UI["UI Screens (Expo Router)<br/>Dashboard · Expenses · Income · Reports · Admin"]
-        AuthContext["AuthContext<br/>Session state & user role"]
+        SyncBanner["SyncStatusBanner<br/>Visual network & pending status"]
+        AuthContext["AuthContext<br/>Instant non-blocking session restore"]
         TokenStore["tokenStore (expo-secure-store)<br/>Android Keystore / iOS Keychain"]
-        ApiClient["apiClient (Axios Interceptor)<br/>Attaches Bearer & X-Client-Type: mobile"]
+        ApiClient["apiClient (Axios Interceptor)<br/>Fail-fast 3.5s timeout & auth retry"]
+        OfflineStore["offlineStorage (AsyncStorage)<br/>Instant cache & Outbox queue"]
+        SyncEngine["syncService<br/>Background replay & sync manager"]
         
+        UI --> SyncBanner
         UI --> AuthContext
+        UI --> OfflineStore
         AuthContext --> TokenStore
         AuthContext --> ApiClient
+        ApiClient --> SyncEngine
+        SyncEngine --> OfflineStore
     end
 
-    subgraph Network["Tailscale VPN / Local LAN"]
-        HTTP["HTTP (Cleartext permitted for 100.x.y.z CGNAT range)"]
+    subgraph Network["Tailscale VPN / Local Wi-Fi LAN"]
+        HTTP["HTTP Cleartext (Permitted for 100.x.y.z & 192.168.x.x)"]
     end
 
     subgraph Backend["Spring Boot 3 Backend"]
@@ -83,16 +90,63 @@ Instead, the mobile app uses the following secure mobile token pattern:
 
 ---
 
+## Offline-First Architecture & Sync Engine
+
+To allow seamless mobile usage when away from Tailscale or home Wi-Fi, the app implements an offline-first cache and outbox sync engine:
+
+```mermaid
+flowchart LR
+    subgraph ReadPath["Read Path (Fast Cache-First)"]
+        UI1["Screen Mount"] --> Cache["AsyncStorage Cache (<5ms)"]
+        Cache --> Render["Instant UI Render"]
+        Render -. "Background Revalidate" .-> Network["Backend API"]
+        Network -. "Update Cache" .-> Cache
+    end
+
+    subgraph WritePath["Write Path (Optimistic Outbox)"]
+        UI2["Create / Edit / Delete"] --> Optimistic["Update Local Cache"]
+        Optimistic --> Outbox["Append to Outbox Queue"]
+        Outbox --> Sync["SyncService"]
+        Sync -- "When Online" --> Replay["Sequential API Replay"]
+    end
+```
+
+### 1. Persistent Local Storage (`offlineStorage.ts`)
+- Utilizes `@react-native-async-storage/async-storage` for durable key-value caching.
+- Caches full response payloads for:
+  - Dashboard overview metrics & trend data
+  - Expense & income paginated lists and search results
+  - Expense and income category catalogs
+- Screen hooks read from cache synchronously on mount, yielding instantaneous screen loads (<5ms) without waiting for network timeouts.
+
+### 2. Optimistic Mutations & Outbox Queue (`syncService.ts`)
+- When creating, updating, or deleting an expense, income entry, or category:
+  - If network is unreachable or request times out, a local synthetic record (e.g. temporary negative ID `Date.now()`) is added directly to cache so the UI updates immediately.
+  - A queued mutation action (`CREATE_EXPENSE`, `UPDATE_EXPENSE`, `DELETE_EXPENSE`, etc.) is appended to the persistent FIFO outbox in `AsyncStorage`.
+- `syncPendingMutations()` is triggered whenever:
+  - The app returns to the foreground.
+  - A successful network request confirms connectivity.
+  - The user manually triggers sync from the `SyncStatusBanner`.
+
+### 3. Startup & Timeout Optimizations
+- **Non-blocking Auth Bootstrap**: `AuthService.bootstrapSession()` restores user session from storage instantaneously (<2ms). It dispatches a background refresh token exchange without delaying the UI render.
+- **Fail-Fast Network Timeout**: Axios `timeout` in `apiClient.ts` is configured to **3,500ms** (down from standard 15,000ms). When disconnected from VPN/LAN, API attempts fail rapidly, falling back to cached state without stalling the interface.
+- **Visual Status**: `SyncStatusBanner.tsx` displays non-intrusive status indicators:
+  - *Offline (using cached data)*
+  - *Syncing...*
+  - *X changes pending sync*
+
+---
+
 ## Native Android Configuration
 
 The mobile app includes a prebuilt Android project located in `mobile/android/`.
 
 ### Cleartext Traffic & Network Security
-Because self-hosted instances on home networks or Tailscale often run over plain HTTP:
-- `mobile/android/app/src/main/res/xml/network_security_config.xml` configures Android to allow cleartext traffic specifically for:
-  - Configured Tailscale IP (`100.103.68.49`)
-  - Tailscale CGNAT IP range (`100.64.0.0/10`)
-  - Local home network range (`192.168.0.0/16`)
+Self-hosted instances on home networks or Tailscale typically run over plain HTTP:
+- In [network_security_config.xml](file:///c:/Projects/Expense-tracking/Expense-tracker/mobile/android/app/src/main/res/xml/network_security_config.xml), cleartext traffic is permitted via `<base-config cleartextTrafficPermitted="true">`.
+- **Why this configuration is required**: Android OS rejects unencrypted HTTP by default. While `<domain>` tags allow whitelisting individual hostnames, Android's network security parser **does not support subnet/CIDR notation** (such as `192.168.0.0/16`). Whitelisting `192.168.0.0` will *not* match `192.168.29.70`. Permitting cleartext via `base-config` allows any local LAN or Tailscale IP to connect over HTTP.
+- **Important**: Because `network_security_config.xml` is compiled directly into the native Android application bundle, **any edits to this file require recompiling the APK** (`./gradlew assembleDebug` or EAS build) to take effect on physical devices.
 - `mobile/android/app/src/main/AndroidManifest.xml` wires `android:networkSecurityConfig="@xml/network_security_config"` and `android:usesCleartextTraffic="true"`.
 
 ### Keystores
@@ -124,29 +178,34 @@ mobile/
 │   │   └── login.tsx            Login / Registration screen
 │   └── (app)/                   Authenticated tab & modal route group
 │       ├── _layout.tsx          Bottom tabs navigator
-│       ├── index.tsx            Dashboard (summary metrics, charts, quick actions)
-│       ├── expenses.tsx         Expense list with search, filter, pagination, add/edit
-│       ├── income.tsx           Income list with search, filter, pagination, add/edit
+│       ├── index.tsx            Dashboard (instant cache & sync banner)
+│       ├── expenses.tsx         Expense list with offline outbox & sync banner
+│       ├── income.tsx           Income list with offline outbox & sync banner
 │       ├── reports.tsx          Monthly/yearly reports with CSV native share export
 │       ├── categories.tsx       Expense category management
 │       ├── income-categories.tsx Income category management
-│       ├── settings.tsx         Server URL config, change password, logout
+│       ├── settings.tsx         Server URL config (smart normalization), logout
 │       └── admin/users.tsx      Admin user management
 ├── assets/                      App icons, adaptive icons, and splash screens
-├── components/                  Reusable UI components (e.g. DropdownSelect)
+├── components/                  Reusable UI components
+│   ├── SyncStatusBanner.tsx     Offline indicator & pending sync manager banner
+│   └── DropdownSelect.tsx
 ├── constants/                   Payment modes and styling constants
 ├── context/                     AuthContext and NotificationContext
 ├── services/                    Axios services matching backend REST endpoints
-│   ├── apiClient.ts             Axios instance with mobile auth headers & interceptors
+│   ├── apiClient.ts             Axios instance with mobile auth headers & 3.5s timeout
 │   ├── tokenStore.ts            SecureStore token wrapper
-│   ├── authService.ts
-│   ├── expenseService.ts
-│   ├── incomeService.ts
-│   ├── categoryService.ts
+│   ├── authService.ts           Fast bootstrap & auth lifecycle
+│   ├── expenseService.ts        Cached & outbox-enabled expense service
+│   ├── incomeService.ts         Cached & outbox-enabled income service
+│   ├── categoryService.ts       Cached category service
 │   ├── incomeCategoryService.ts
-│   ├── dashboardService.ts
+│   ├── dashboardService.ts      Cached dashboard service
 │   ├── reportService.ts
-│   └── adminService.ts
+│   ├── adminService.ts
+│   └── offline/
+│       ├── offlineStorage.ts    AsyncStorage persistent cache engine
+│       └── syncService.ts       FIFO outbox queue & auto-sync replay engine
 ├── app.json                     Expo project manifest
 ├── eas.json                     EAS build profiles (preview, production)
 ├── babel.config.js              Babel configuration with Expo Router plugin
@@ -179,11 +238,12 @@ npm run android
 ```
 
 ### Server URL Configuration
-1. The app defaults to connecting to `http://100.103.68.49/api`.
-2. To point to your own host or local server:
+1. The app defaults to connecting to `http://100.103.68.49/api` (Tailscale VPN).
+2. To point to your home Wi-Fi LAN or any other server:
    - In the mobile app, navigate to **Settings tab → Server Connection**.
-   - Update the Server URL (e.g., `http://192.168.1.100:8080/api` or `https://expense.yourdomain.com/api`).
-   - Click **Save**. The URL is saved locally in `AsyncStorage` and applied to all future API calls.
+   - Enter your server IP or address (e.g., `192.168.29.70`, `http://192.168.29.70`, or `http://192.168.29.70/api`).
+   - The app automatically prepends `http://` if omitted and ensures `/api` is cleanly appended.
+   - Click **Save Connection URL**. The configuration is saved in local device storage and takes effect immediately.
 
 ### Building APKs
 

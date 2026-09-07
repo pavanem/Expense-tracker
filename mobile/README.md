@@ -51,14 +51,23 @@ eas build:configure
 ```
 
 ### Build the APK
+
+#### Option A: EAS Cloud Build (No Android Studio required)
 ```bash
 npm run build:android:preview
 ```
 
 This runs a **cloud build** on Expo's servers. After ~10 minutes, you'll get a download link for the `.apk` file.
 
+#### Option B: Local Gradle Build (Offline / Local machine)
+```bash
+cd android
+./gradlew assembleDebug
+# Generated APK: android/app/build/outputs/apk/debug/app-debug.apk
+```
+
 **To install on your Android device:**
-1. Download the `.apk` to your phone
+1. Download or copy the `.apk` to your phone (or install via `adb install <path-to-apk>`)
 2. Open it — Android will ask you to "Allow installs from unknown sources" once
 3. Tap Install → Done ✅
 
@@ -111,6 +120,7 @@ This is fully backward compatible — the web app's cookie flow is unchanged.
 
 ```
 mobile/
+├── android/                  Native Android project (Gradle, manifests, Tailscale cleartext config)
 ├── app/
 │   ├── _layout.tsx           Root layout (providers + splash)
 │   ├── (auth)/
@@ -127,6 +137,12 @@ mobile/
 │       ├── income-categories.tsx
 │       └── admin/
 │           └── users.tsx     Admin user management
+├── assets/                   App launcher icons, adaptive icons, splash screens
+├── components/               Reusable UI components (e.g. DropdownSelect)
+├── constants/                Payment modes and styling constants
+├── context/
+│   ├── AuthContext.tsx
+│   └── NotificationContext.tsx
 ├── services/
 │   ├── apiClient.ts          Axios + mobile auth interceptor
 │   ├── tokenStore.ts         SecureStore token persistence
@@ -138,10 +154,9 @@ mobile/
 │   ├── dashboardService.ts
 │   ├── reportService.ts      Includes CSV export via share sheet
 │   └── adminService.ts
-├── context/
-│   ├── AuthContext.tsx
-│   └── NotificationContext.tsx
 ├── app.json                  Expo config
 ├── eas.json                  EAS Build profiles
-└── package.json
+├── babel.config.js           Babel configuration
+├── package.json
+└── tsconfig.json
 ```

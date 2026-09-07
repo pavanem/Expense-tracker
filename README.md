@@ -1,4 +1,4 @@
-﻿# Expense Tracker
+# Expense Tracker
 
 A self-hosted personal expense & income tracking web application. Track daily expenses and income, organise them into custom categories, browse a live dashboard, generate reports, and export everything to CSV — all running on your own hardware with no cloud dependency.
 
@@ -14,6 +14,7 @@ flowchart TB
         A1["Android browser"]
         A2["Desktop browser"]
         A3["Tablet browser"]
+        M1["Android Mobile App<br/>(React Native / Expo)"]
     end
 
     subgraph Server["Self-hosted server (Docker Compose)"]
@@ -22,7 +23,7 @@ flowchart TB
         end
 
         subgraph BE["backend container — Spring Boot 3 / Java 21"]
-            Auth["Auth layer<br/>JWT access token + httpOnly refresh cookie"]
+            Auth["Auth layer<br/>JWT access token + httpOnly refresh cookie<br/>(or JSON refresh token for mobile)"]
             C["Controllers<br/>Expenses · Income · Categories · Dashboard · Reports · Admin"]
             S["Services<br/>Business rules, validation, DTO mapping (MapStruct)"]
             R["Repositories<br/>Spring Data JPA + Specifications"]
@@ -44,10 +45,12 @@ flowchart TB
     end
 
     A1 & A2 & A3 -- "HTTPS/HTTP :80" --> N
+    M1 -. "HTTP (Tailscale / LAN)" .-> Auth
 ```
 
 **Request flow:**
-Browser → Nginx (serves static React bundle, reverse-proxies `/api/**`) → JWT filter (validates `Authorization: Bearer` header) → Controller → Service (business rules, MapStruct DTO mapping) → Repository (Spring Data JPA + `Specification`-based dynamic queries) → PostgreSQL.
+- **Web:** Browser → Nginx (serves static React bundle, reverse-proxies `/api/**`) → JWT filter (validates `Authorization: Bearer` header) → Controller → Service (business rules, MapStruct DTO mapping) → Repository (Spring Data JPA + `Specification`-based dynamic queries) → PostgreSQL.
+- **Mobile:** React Native App → Tailscale/LAN HTTP → Auth layer (detects `X-Client-Type: mobile` header, manages token lifecycle in `expo-secure-store`) → Controller → Service → PostgreSQL.
 
 **CI/CD flow:**
 Every push to `main` triggers a GitHub Actions workflow on the self-hosted runner: the Cucumber acceptance-test suite runs first against an isolated PostgreSQL Testcontainer. Only if all scenarios pass does the deploy job rebuild Docker images and restart the stack.
@@ -60,7 +63,8 @@ Every push to `main` triggers a GitHub Actions workflow on the self-hosted runne
 |---|---|
 | Backend | Java 21, Spring Boot 3.3.4, Spring Security (JWT stateless), Spring Data JPA, Spring Validation, MapStruct, Lombok, Flyway, springdoc-openapi |
 | Database | PostgreSQL 16 |
-| Frontend | React 18, Vite, Material UI, Axios, React Router v6, Recharts |
+| Frontend (Web) | React 18, Vite, Material UI, Axios, React Router v6, Recharts |
+| Mobile (Android) | React Native 0.74, Expo SDK 51, Expo Router, React Native Paper, Expo SecureStore, Android Gradle (API 34) |
 | Infra | Docker, Docker Compose, Nginx, DuckDNS (optional), Let's Encrypt / Certbot (optional) |
 | Testing — unit/slice | JUnit 5, Mockito, AssertJ, `@DataJpaTest`, `@WebMvcTest`, `@SpringBootTest` |
 | Testing — acceptance | Cucumber 7, REST-Assured, Testcontainers (PostgreSQL) |
@@ -96,7 +100,7 @@ expense-tracker/
 │   └── src/test/
 │       ├── java/.../steps/      Step definitions: Auth, Expense, Income, DataIsolation, Report
 │       └── resources/features/  Gherkin feature files
-├── frontend/                    React + MUI SPA
+├── frontend/                    React + MUI SPA (Web)
 │   └── src/
 │       ├── services/            Axios client + per-domain API services
 │       ├── components/          Layout, expense & income & category widgets, common UI
@@ -105,6 +109,17 @@ expense-tracker/
 │       ├── context/             AuthContext (JWT session), NotificationContext
 │       └── theme/               Ledger-aesthetic MUI theme
 │   └── Dockerfile
+├── mobile/                      React Native + Expo Android Mobile App
+│   ├── android/                 Native Android project (Gradle, manifest, Tailscale network security)
+│   ├── app/                     Expo Router screens & layouts (tabs, auth, modals)
+│   ├── services/                Axios API clients & SecureStore token management
+│   ├── context/                 AuthContext & NotificationContext
+│   ├── components/              Reusable UI components
+│   ├── constants/               Payment modes and constants
+│   ├── assets/                  App icons and splash screens
+│   └── app.json / eas.json      Expo and EAS build configurations
+├── docs/                        Extended documentation & technical guides
+│   └── mobile-app.md            Mobile architecture, auth flow, and build guide
 ├── docker/nginx/                Nginx config: reverse proxy, TLS, rate limiting
 ├── scripts/
 │   ├── backup.sh                Automated DB backup to Google Drive
@@ -290,6 +305,24 @@ npm run dev
 # Runs on http://localhost:5173 with hot reload
 ```
 
+### Mobile App (Android / Expo)
+
+```bash
+cd mobile
+npm install
+
+# Start the Expo development server
+npm start
+
+# Run on Android emulator or connected device via ADB
+npm run android
+
+# Build standalone debug APK via local Gradle
+cd android && ./gradlew assembleDebug
+```
+
+> For comprehensive mobile app architecture, Tailscale network configuration, and EAS cloud builds, see the [Mobile App Guide](docs/mobile-app.md).
+
 ---
 
 ## Running Tests
@@ -439,7 +472,7 @@ When `SECURITY_ENABLED=true`:
 
 - **First-account-only self-registration** — closes automatically after the first user registers. Subsequent accounts are created via admin API or Settings → User Management.
 - **Short-lived access tokens** (default 15 min) — carried in the `Authorization: Bearer` header.
-- **Long-lived refresh tokens** (default 30 days) — stored as an `httpOnly`, `SameSite=Lax` cookie scoped to `/api/auth`. Never readable by JavaScript.
+- **Long-lived refresh tokens** (default 30 days) — for web clients, stored as an `httpOnly`, `SameSite=Lax` cookie scoped to `/api/auth` (never readable by JavaScript); for mobile clients (identified by `X-Client-Type: mobile`), returned in the JSON body and securely persisted in the hardware-backed keystore via `expo-secure-store`.
 - **Refresh token rotation** — each refresh invalidates the old token. Reuse of an already-rotated token revokes all sessions immediately (theft detection).
 - **Per-user data isolation** — all queries are scoped to the authenticated `userId`. A user can never read or modify another user's records.
 - **Admin role** — first registered user gets `ROLE_ADMIN`. Only admins access `/api/admin/**`.
@@ -471,6 +504,7 @@ Applied automatically on startup:
 
 Features implemented beyond the original SRS v1 scope:
 - JWT authentication with refresh-token rotation and theft detection
+- Native Android Mobile App (React Native / Expo SDK 51 with Tailscale integration & offline debug build)
 - Per-user data isolation (multi-account support)
 - Income tracking (income entries, income categories, income reports)
 - Admin user management (create, update, reset password, delete)

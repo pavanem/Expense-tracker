@@ -270,3 +270,31 @@ works — it is not the finish line.
 ### ⬜ Phase 3: App-level hardening — lockout, CORS, cookies, actuator/swagger (next)
 ### ⬜ Phase 4: OS/network hardening — ufw, SSH, fail2ban, auto-updates
 ### ⬜ Phase 5: Monitoring — failed-login alerting, renewal checks
+
+---
+
+## ✅ Module 9: Mobile App (React Native + Expo + Android) — complete
+
+A native-feel Android and iOS-ready mobile client built with React Native 0.74, Expo SDK 51, and Expo Router for self-hosted deployments over Tailscale.
+
+### Key Deliverables:
+- **Backend Mobile Auth Integration**:
+  - Added support for `X-Client-Type: mobile` header in `AuthController`.
+  - Refresh tokens emitted in JSON payload for mobile clients (avoiding reliance on httpOnly cookies on native apps).
+  - Added `MobileRefreshRequest` DTO for body-based refresh token exchange and rotation.
+- **Mobile Client Architecture & Routing**:
+  - Built with **Expo Router** using typed routes and file-based layout groups (`(auth)` and `(app)`).
+  - Dark ledger aesthetic matching the web app, themed via React Native Paper.
+  - Complete screen implementations: Dashboard, Expenses, Income, Reports (with native share sheet CSV export), Categories, Income Categories, Settings, and Admin User Management.
+- **Security & Token Store**:
+  - `tokenStore.ts`: leverages `expo-secure-store` backed by Android Keystore / iOS Keychain for persistent token storage.
+  - `apiClient.ts`: Axios interceptor with silent token refresh on 401 and request replay.
+- **Native Android Configuration**:
+  - Prebuilt native `mobile/android` project with Gradle wrapper.
+  - `network_security_config.xml` configured to permit cleartext HTTP communication over Tailscale CGNAT IP ranges (`100.64.0.0/10`) and local subnets.
+- **EAS Build & Local Build Profiles**:
+  - `eas.json`: preview and production APK build profiles.
+  - Local offline Gradle build support via `./gradlew assembleDebug`.
+- **Documentation**:
+  - Comprehensive guide added in `docs/mobile-app.md` and updated `mobile/README.md`.
+

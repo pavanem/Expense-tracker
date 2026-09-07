@@ -19,3 +19,16 @@ Feature: Authentication and Security Management
   Scenario: Protect secured endpoints when unauthenticated
     When an unauthenticated request is made to "/api/expenses"
     Then the response status code should be 401
+
+  Scenario: Refresh session token using HttpOnly cookie
+    Given an authenticated user "adminuser" exists with password "Password123!"
+    When a user logs in with username "adminuser" and password "Password123!"
+    Then the response status code should be 200
+    When the user refreshes the session token via cookie
+    Then the response status code should be 200
+    And the response should contain an access token
+
+  Scenario: Reject refresh request when no cookie or body is provided
+    When an unauthenticated refresh request is made without a cookie or body
+    Then the response status code should be 401
+

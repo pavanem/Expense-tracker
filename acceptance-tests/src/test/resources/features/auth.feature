@@ -21,8 +21,8 @@ Feature: Authentication and Security Management
     Then the response status code should be 401
 
   Scenario: Refresh session token using HttpOnly cookie
-    Given an authenticated user "refresh_user" exists with password "Password123!"
-    When a user logs in with username "refresh_user" and password "Password123!"
+    Given an authenticated user "adminuser" exists with password "Password123!"
+    When a user logs in with username "adminuser" and password "Password123!"
     Then the response status code should be 200
     When the user refreshes the session token via cookie
     Then the response status code should be 200

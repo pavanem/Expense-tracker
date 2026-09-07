@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Allows cleartext (HTTP) traffic for self-hosted local LAN and Tailscale deployments.
+  HTTPS is always supported everywhere.
+-->
+<network-security-config>
+    <!-- Allow HTTP cleartext traffic for local networks, Tailscale, and custom server IPs -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
+</network-security-config>

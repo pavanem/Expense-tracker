@@ -3,8 +3,8 @@ backend/target/
 backend/logs/
 *.class
 
-# Frontend
-frontend/node_modules/
+# Node / Frontend / Mobile
+node_modules/
 frontend/dist/
 frontend/.vite/
 

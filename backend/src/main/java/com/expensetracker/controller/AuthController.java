@@ -4,6 +4,7 @@ import com.expensetracker.config.JwtProperties;
 import com.expensetracker.dto.AuthResponse;
 import com.expensetracker.dto.ChangePasswordRequest;
 import com.expensetracker.dto.LoginRequest;
+import com.expensetracker.dto.MobileRefreshRequest;
 import com.expensetracker.dto.RegisterRequest;
 import com.expensetracker.exception.InvalidRefreshTokenException;
 import com.expensetracker.security.AuthenticatedUser;
@@ -46,9 +47,12 @@ public class AuthController {
     @Operation(summary = "Create the first (and only) account for this self-hosted instance")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request, HttpServletRequest httpRequest) {
         AuthService.AuthResult result = authService.register(request, deviceLabelFrom(httpRequest));
+        AuthResponse body = isMobileClient(httpRequest)
+                ? result.response().withRefreshToken(result.rawRefreshToken())
+                : result.response();
         return ResponseEntity.status(HttpStatus.CREATED)
                 .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(result).toString())
-                .body(result.response());
+                .body(body);
     }
 
     @PostMapping("/login")
@@ -59,27 +63,51 @@ public class AuthController {
         }
 
         AuthService.AuthResult result = authService.login(request);
+        AuthResponse body = isMobileClient(httpRequest)
+                ? result.response().withRefreshToken(result.rawRefreshToken())
+                : result.response();
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(result).toString())
-                .body(result.response());
+                .body(body);
     }
 
     @PostMapping("/refresh")
-    @Operation(summary = "Exchange the refresh-token cookie for a new access token (and a rotated refresh cookie)")
+    @Operation(summary = "Exchange the refresh-token cookie for a new access token (and a rotated refresh cookie). "
+            + "Mobile clients may pass {\"refreshToken\":\"...\"}  in the request body instead of a cookie.")
     public ResponseEntity<AuthResponse> refresh(
-            @CookieValue(name = REFRESH_COOKIE_NAME, required = false) String refreshToken) {
+            @CookieValue(name = REFRESH_COOKIE_NAME, required = false) String cookieToken,
+            @RequestBody(required = false) MobileRefreshRequest body,
+            HttpServletRequest httpRequest) {
+
+        // Prefer the cookie (web flow); fall back to the body field (mobile flow).
+        String refreshToken = (cookieToken != null && !cookieToken.isBlank())
+                ? cookieToken
+                : (body != null ? body.refreshToken() : null);
+
         if (refreshToken == null || refreshToken.isBlank()) {
-            throw new InvalidRefreshTokenException("No refresh token cookie present");
+            throw new InvalidRefreshTokenException("No refresh token provided");
         }
+
         AuthService.AuthResult result = authService.refresh(refreshToken);
+        // Mobile clients receive the new refresh token in the response body;
+        // web clients get it via the rotated cookie (unchanged behaviour).
+        AuthResponse responseBody = isMobileClient(httpRequest)
+                ? result.response().withRefreshToken(result.rawRefreshToken())
+                : result.response();
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(result).toString())
-                .body(result.response());
+                .body(responseBody);
     }
 
     @PostMapping("/logout")
-    @Operation(summary = "Log out this device (revokes only the current refresh token)")
-    public ResponseEntity<Void> logout(@CookieValue(name = REFRESH_COOKIE_NAME, required = false) String refreshToken) {
+    @Operation(summary = "Log out this device (revokes only the current refresh token). "
+            + "Mobile clients may pass {\"refreshToken\":\"...\"}  in the request body.")
+    public ResponseEntity<Void> logout(
+            @CookieValue(name = REFRESH_COOKIE_NAME, required = false) String cookieToken,
+            @RequestBody(required = false) MobileRefreshRequest body) {
+        String refreshToken = (cookieToken != null && !cookieToken.isBlank())
+                ? cookieToken
+                : (body != null ? body.refreshToken() : null);
         if (refreshToken != null && !refreshToken.isBlank()) {
             authService.logout(refreshToken);
         }
@@ -133,6 +161,15 @@ public class AuthController {
                 .path(REFRESH_COOKIE_PATH)
                 .maxAge(0)
                 .build();
+    }
+
+    /**
+     * Mobile clients send {@code X-Client-Type: mobile} so the server can
+     * include the raw refresh token in the JSON response body (the only safe
+     * way to hand it to a native app that has no httpOnly-cookie support).
+     */
+    private boolean isMobileClient(HttpServletRequest request) {
+        return "mobile".equalsIgnoreCase(request.getHeader("X-Client-Type"));
     }
 
     private String deviceLabelFrom(HttpServletRequest request) {

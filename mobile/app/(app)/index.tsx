@@ -23,6 +23,7 @@ import DropdownSelect from '../../components/DropdownSelect';
 import { PAYMENT_MODES, getPaymentModeLabel } from '../../constants/paymentModes';
 import SyncStatusBanner from '../../components/SyncStatusBanner';
 import syncService from '../../services/offline/syncService';
+import OfflineStorage, { STORAGE_KEYS } from '../../services/offline/offlineStorage';
 
 const { width } = Dimensions.get('window');
 const CHART_COLORS = ['#6366f1', '#22d3ee', '#f59e0b', '#10b981', '#ef4444', '#a855f7'];
@@ -77,9 +78,18 @@ export default function DashboardScreen() {
   }, []);
 
   useEffect(() => {
-    loadData();
+    // 1. Instantly render from local cache (< 5ms)
+    OfflineStorage.get(STORAGE_KEYS.DASHBOARD).then((cached) => {
+      if (cached) {
+        setData(cached);
+        setLoading(false);
+      }
+    });
     CategoryService.list().then(setCategories).catch(() => {});
     IncomeCategoryService.list().then(setIncomeCategories).catch(() => {});
+
+    // 2. Revalidate in background
+    loadData();
   }, []);
 
   const openModal = (type: ModalType) => {

@@ -1,9 +1,31 @@
-﻿import { getApiClient } from './apiClient';
+import { getApiClient } from './apiClient';
 import OfflineStorage, { STORAGE_KEYS } from './offline/offlineStorage';
 import syncService from './offline/syncService';
 
 const IncomeService = {
   async list(params?: any): Promise<any> {
+    if (syncService.isKnownOffline()) {
+      const cached = (await OfflineStorage.get<any[]>(STORAGE_KEYS.INCOMES)) || [];
+      let filtered = cached;
+      if (params?.keyword) {
+        const q = params.keyword.toLowerCase();
+        filtered = cached.filter(
+          (i) =>
+            (i.source && i.source.toLowerCase().includes(q)) ||
+            (i.description && i.description.toLowerCase().includes(q)) ||
+            (i.categoryName && i.categoryName.toLowerCase().includes(q))
+        );
+      }
+      return {
+        content: filtered,
+        totalElements: filtered.length,
+        totalPages: 1,
+        last: true,
+        first: true,
+        size: filtered.length,
+        number: 0,
+      };
+    }
     try {
       const res = await getApiClient().get('/incomes', { params });
       syncService.setOnlineStatus(true);

@@ -1,9 +1,13 @@
-﻿import { getApiClient } from './apiClient';
+import { getApiClient } from './apiClient';
 import OfflineStorage, { STORAGE_KEYS } from './offline/offlineStorage';
 import syncService from './offline/syncService';
 
 const CategoryService = {
   async list(): Promise<any[]> {
+    if (syncService.isKnownOffline()) {
+      const cached = await OfflineStorage.get<any[]>(STORAGE_KEYS.CATEGORIES);
+      if (cached) return cached;
+    }
     try {
       const res = await getApiClient().get('/categories');
       await OfflineStorage.set(STORAGE_KEYS.CATEGORIES, res.data);

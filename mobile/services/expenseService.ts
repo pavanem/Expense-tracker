@@ -1,9 +1,31 @@
-﻿import { getApiClient } from './apiClient';
+import { getApiClient } from './apiClient';
 import OfflineStorage, { STORAGE_KEYS } from './offline/offlineStorage';
 import syncService from './offline/syncService';
 
 const ExpenseService = {
   async list(params?: any): Promise<any> {
+    if (syncService.isKnownOffline()) {
+      const cached = (await OfflineStorage.get<any[]>(STORAGE_KEYS.EXPENSES)) || [];
+      let filtered = cached;
+      if (params?.keyword) {
+        const q = params.keyword.toLowerCase();
+        filtered = cached.filter(
+          (e) =>
+            (e.merchant && e.merchant.toLowerCase().includes(q)) ||
+            (e.description && e.description.toLowerCase().includes(q)) ||
+            (e.categoryName && e.categoryName.toLowerCase().includes(q))
+        );
+      }
+      return {
+        content: filtered,
+        totalElements: filtered.length,
+        totalPages: 1,
+        last: true,
+        first: true,
+        size: filtered.length,
+        number: 0,
+      };
+    }
     try {
       const res = await getApiClient().get('/expenses', { params });
       syncService.setOnlineStatus(true);

@@ -8,6 +8,7 @@ import IncomeCategoryService from '../../services/incomeCategoryService';
 import { useNotification } from '../../context/NotificationContext';
 import SyncStatusBanner from '../../components/SyncStatusBanner';
 import syncService from '../../services/offline/syncService';
+import OfflineStorage, { STORAGE_KEYS } from '../../services/offline/offlineStorage';
 
 export default function IncomeCategoriesScreen() {
   const { showNotification } = useNotification();
@@ -36,7 +37,16 @@ export default function IncomeCategoriesScreen() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    // Instantly load cached income categories (< 5ms)
+    OfflineStorage.get<any[]>(STORAGE_KEYS.INCOME_CATEGORIES).then((cached) => {
+      if (cached && cached.length > 0) {
+        setCategories(cached);
+        setLoading(false);
+      }
+    });
+    load();
+  }, []);
 
   const openAdd = () => { setEditing(null); setName(''); setFormError(''); setModalVisible(true); };
   const openEdit = (cat: any) => { setEditing(cat); setName(cat.name); setFormError(''); setModalVisible(true); };

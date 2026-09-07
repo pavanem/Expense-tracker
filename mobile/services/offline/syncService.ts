@@ -1,4 +1,4 @@
-﻿import { getApiClient } from '../apiClient';
+import { getApiClient } from '../apiClient';
 import OfflineStorage, { STORAGE_KEYS, SyncQueueItem } from './offlineStorage';
 
 type SyncListener = (state: {
@@ -59,15 +59,19 @@ class SyncService {
     }
   }
 
+  public isKnownOffline(): boolean {
+    return !this.isOnline;
+  }
+
   /**
    * Fast probe to verify if Tailscale / server is reachable.
-   * Uses a tight 2.5s timeout.
+   * Uses a tight 1.8s timeout.
    */
   public async checkReachability(): Promise<boolean> {
     try {
       // /auth/registration-status is public and fast
       await getApiClient().get('/auth/registration-status', {
-        timeout: 2500,
+        timeout: 1800,
       });
       this.setOnlineStatus(true);
       return true;

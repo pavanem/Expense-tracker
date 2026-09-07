@@ -8,6 +8,7 @@ import CategoryService from '../../services/categoryService';
 import { useNotification } from '../../context/NotificationContext';
 import SyncStatusBanner from '../../components/SyncStatusBanner';
 import syncService from '../../services/offline/syncService';
+import OfflineStorage, { STORAGE_KEYS } from '../../services/offline/offlineStorage';
 
 export default function CategoriesScreen() {
   const { showNotification } = useNotification();
@@ -36,7 +37,16 @@ export default function CategoriesScreen() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    // Instantly load cached categories (< 5ms)
+    OfflineStorage.get<any[]>(STORAGE_KEYS.CATEGORIES).then((cached) => {
+      if (cached && cached.length > 0) {
+        setCategories(cached);
+        setLoading(false);
+      }
+    });
+    load();
+  }, []);
 
   const openAdd = () => { setEditing(null); setName(''); setFormError(''); setModalVisible(true); };
   const openEdit = (cat: any) => { setEditing(cat); setName(cat.name); setFormError(''); setModalVisible(true); };

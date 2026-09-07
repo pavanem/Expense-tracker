@@ -64,25 +64,38 @@ const AuthService = {
       return null;
     }
 
+    if (storedUser) {
+      if (storedRefresh) {
+        // Attempt fast background token rotation without blocking app launch if offline
+        getApiClient()
+          .post('/auth/refresh', { refreshToken: storedRefresh }, { timeout: 2000 })
+          .then((res) => applyAuthResponse(res.data))
+          .catch(async (err: any) => {
+            if (err?.response?.status === 401 || err?.response?.status === 403) {
+              await clearAllAuthData();
+            }
+          });
+      }
+      return storedUser;
+    }
+
     if (storedRefresh) {
       try {
-        const { data } = await getApiClient().post('/auth/refresh', { refreshToken: storedRefresh });
+        const { data } = await getApiClient().post(
+          '/auth/refresh',
+          { refreshToken: storedRefresh },
+          { timeout: 2000 }
+        );
         return await applyAuthResponse(data);
       } catch (err: any) {
-        // If the server explicitly rejected the token (401 or 403), the session is invalid
         if (err?.response?.status === 401 || err?.response?.status === 403) {
           await clearAllAuthData();
-          return null;
-        }
-        // If network error (Tailscale connecting / offline), keep stored user logged in!
-        if (storedUser) {
-          return storedUser;
         }
         return null;
       }
     }
 
-    return storedUser;
+    return null;
   },
 
   async logout(): Promise<void> {

@@ -1,9 +1,13 @@
-﻿import { getApiClient } from './apiClient';
+import { getApiClient } from './apiClient';
 import OfflineStorage, { STORAGE_KEYS } from './offline/offlineStorage';
 import syncService from './offline/syncService';
 
 const IncomeCategoryService = {
   async list(): Promise<any[]> {
+    if (syncService.isKnownOffline()) {
+      const cached = await OfflineStorage.get<any[]>(STORAGE_KEYS.INCOME_CATEGORIES);
+      if (cached) return cached;
+    }
     try {
       const res = await getApiClient().get('/income-categories');
       await OfflineStorage.set(STORAGE_KEYS.INCOME_CATEGORIES, res.data);

@@ -15,6 +15,7 @@ import DropdownSelect from '../../components/DropdownSelect';
 import { PAYMENT_MODES, getPaymentModeLabel } from '../../constants/paymentModes';
 import SyncStatusBanner from '../../components/SyncStatusBanner';
 import syncService from '../../services/offline/syncService';
+import OfflineStorage, { STORAGE_KEYS } from '../../services/offline/offlineStorage';
 
 const PAGE_SIZE = 20;
 
@@ -72,7 +73,17 @@ export default function ExpensesScreen() {
     }
   }, [searchQuery]);
 
-  useEffect(() => { loadCategories(); loadExpenses(0); }, []);
+  useEffect(() => {
+    // Instantly load cached expenses (< 5ms)
+    OfflineStorage.get<any[]>(STORAGE_KEYS.EXPENSES).then((cached) => {
+      if (cached && cached.length > 0) {
+        setExpenses(cached);
+        setLoading(false);
+      }
+    });
+    loadCategories();
+    loadExpenses(0);
+  }, []);
   useEffect(() => { loadExpenses(0); }, [searchQuery]);
 
   const openAdd = () => {

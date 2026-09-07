@@ -10,6 +10,7 @@ import { useNotification } from '../../context/NotificationContext';
 import AuthService from '../../services/authService';
 import { getApiUrl, setApiUrl } from '../../services/tokenStore';
 import { updateApiUrl } from '../../services/apiClient';
+import syncService from '../../services/offline/syncService';
 import { useEffect } from 'react';
 
 export default function SettingsScreen() {
@@ -58,13 +59,32 @@ export default function SettingsScreen() {
   };
 
   const handleSaveUrl = async () => {
-    if (!serverUrl.trim()) return;
+    let raw = serverUrl.trim();
+    if (!raw) return;
     setSavingUrl(true);
     try {
-      const cleanUrl = serverUrl.trim().replace(/\/$/, '') + '/api';
-      await setApiUrl(cleanUrl);
-      await updateApiUrl(cleanUrl);
-      showNotification('Server URL updated. Reconnecting…', 'success');
+      // 1. Prepend http:// if user omitted http:// or https://
+      if (!/^https?:\/\//i.test(raw)) {
+        raw = 'http://' + raw;
+      }
+      // 2. Strip any trailing slashes
+      raw = raw.replace(/\/+$/, '');
+      // 3. Ensure path ends with /api (without duplicating)
+      if (!raw.endsWith('/api')) {
+        raw = raw + '/api';
+      }
+      setServerUrl(raw);
+      await setApiUrl(raw);
+      await updateApiUrl(raw);
+
+      // Trigger reachability check and queue sync immediately
+      syncService.checkReachability().then((reachable) => {
+        if (reachable) {
+          syncService.syncQueue().catch(() => {});
+        }
+      });
+
+      showNotification(`Server URL set to ${raw}`, 'success');
     } catch {
       showNotification('Failed to update URL', 'error');
     } finally {

@@ -28,7 +28,7 @@ export async function initApiClient(): Promise<void> {
 function createClient(baseURL: string): AxiosInstance {
   const client = axios.create({
     baseURL,
-    timeout: 15000,
+    timeout: 3500,
     headers: {
       'Content-Type': 'application/json',
       'X-Client-Type': 'mobile',
@@ -57,7 +57,10 @@ function createClient(baseURL: string): AxiosInstance {
         const response = await axios.post(
           `${_baseURL}/auth/refresh`,
           { refreshToken: storedRefresh },
-          { headers: { 'Content-Type': 'application/json', 'X-Client-Type': 'mobile' } }
+          {
+            timeout: 3500,
+            headers: { 'Content-Type': 'application/json', 'X-Client-Type': 'mobile' },
+          }
         );
         const { accessToken, refreshToken: newRefresh } = response.data;
         await setAccessToken(accessToken);

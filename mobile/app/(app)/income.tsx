@@ -14,6 +14,7 @@ import { useNotification } from '../../context/NotificationContext';
 import DropdownSelect from '../../components/DropdownSelect';
 import SyncStatusBanner from '../../components/SyncStatusBanner';
 import syncService from '../../services/offline/syncService';
+import OfflineStorage, { STORAGE_KEYS } from '../../services/offline/offlineStorage';
 
 const PAGE_SIZE = 20;
 
@@ -69,7 +70,17 @@ export default function IncomeScreen() {
     }
   }, [searchQuery]);
 
-  useEffect(() => { loadCategories(); loadIncomes(0); }, []);
+  useEffect(() => {
+    // Instantly load cached income (< 5ms)
+    OfflineStorage.get<any[]>(STORAGE_KEYS.INCOMES).then((cached) => {
+      if (cached && cached.length > 0) {
+        setIncomes(cached);
+        setLoading(false);
+      }
+    });
+    loadCategories();
+    loadIncomes(0);
+  }, []);
   useEffect(() => { loadIncomes(0); }, [searchQuery]);
 
   const openAdd = () => {

@@ -95,7 +95,19 @@ public class AuthService {
                 .orElseThrow(() -> new InvalidRefreshTokenException("Refresh token not recognized"));
 
         if (stored.getRevokedAt() != null) {
-            log.warn("Refresh token reuse detected for user id={} — revoking all sessions", stored.getUser().getId());
+            // Grace period (30 seconds): if this token was rotated very recently and has a recorded
+            // replacement hash, return a fresh token pair rather than treating concurrent/retried
+            // requests as token theft. Legitimate mobile apps often experience packet latency or
+            // duplicate parallel requests on app launch.
+            if (stored.getReplacedByHash() != null &&
+                    stored.getRevokedAt().isAfter(LocalDateTime.now().minusSeconds(30))) {
+                log.info("Refresh token presented within 30s grace period for user id={} — returning fresh token pair",
+                        stored.getUser().getId());
+                User user = stored.getUser();
+                return issueTokens(user, stored.getDeviceLabel());
+            }
+
+            log.warn("Refresh token reuse detected for user id={} outside grace period — revoking all sessions", stored.getUser().getId());
             refreshTokenRepository.revokeAllActiveForUser(stored.getUser().getId(), LocalDateTime.now());
             throw new RefreshTokenReuseException(
                     "This session was already used elsewhere and has been revoked for your security. Please log in again.");

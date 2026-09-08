@@ -1,9 +1,11 @@
-import { getApiClient } from './apiClient';
+import { getApiClient, refreshSession } from './apiClient';
 import {
   clearAllAuthData,
   getRefreshToken,
   getSessionUser,
   getStoredAccessToken,
+  isJwtExpired,
+  notifySessionExpired,
   setAccessToken,
   setRefreshToken,
   setSessionUser,
@@ -47,9 +49,10 @@ const AuthService = {
 
   /**
    * Called on app start — restores the session from SecureStore.
-   * If a refresh token is present, attempts to rotate it against the backend.
-   * If the network is temporarily unavailable (e.g. Tailscale connecting), preserves the
-   * saved session so the user is NOT kicked back to the login screen.
+   * If a refresh token is present and the access token has expired (> 15 mins),
+   * coordinates token refresh via the shared refreshSession to avoid racing with screen API calls.
+   * If the network is temporarily unavailable (e.g. Tailscale connecting or offline),
+   * preserves the saved session so the user is NEVER kicked back to the login screen.
    */
   async bootstrapSession(): Promise<SessionUser | null> {
     const storedUser = await getSessionUser();
@@ -65,28 +68,25 @@ const AuthService = {
     }
 
     if (storedUser) {
-      if (storedRefresh) {
-        // Attempt fast background token rotation without blocking app launch if offline
-        getApiClient()
-          .post('/auth/refresh', { refreshToken: storedRefresh }, { timeout: 2000 })
-          .then((res) => applyAuthResponse(res.data))
-          .catch(async (err: any) => {
-            if (err?.response?.status === 401 || err?.response?.status === 403) {
-              await clearAllAuthData();
-            }
-          });
+      // If access token is expired (> 15 mins), perform background refresh using the
+      // shared refreshSession promise. Any concurrent screen API calls will join this
+      // exact promise instead of firing duplicate refresh requests.
+      if (storedRefresh && isJwtExpired(storedAccess)) {
+        refreshSession().catch(async (err: any) => {
+          if (err?.response?.status === 401 || err?.response?.status === 403) {
+            await clearAllAuthData();
+            notifySessionExpired();
+          }
+          // Network errors: leave storedUser intact so the user can use the app offline!
+        });
       }
       return storedUser;
     }
 
     if (storedRefresh) {
       try {
-        const { data } = await getApiClient().post(
-          '/auth/refresh',
-          { refreshToken: storedRefresh },
-          { timeout: 2000 }
-        );
-        return await applyAuthResponse(data);
+        await refreshSession();
+        return await getSessionUser();
       } catch (err: any) {
         if (err?.response?.status === 401 || err?.response?.status === 403) {
           await clearAllAuthData();

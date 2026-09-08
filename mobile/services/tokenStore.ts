@@ -14,6 +14,25 @@ export const DEFAULT_API_URL = 'http://100.103.68.49/api';
 
 export const getAccessToken = () => accessToken;
 
+export function isJwtExpired(token: string | null): boolean {
+  if (!token) return true;
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return true;
+    let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4) {
+      base64 += '=';
+    }
+    const json = atob(base64);
+    const payload = JSON.parse(json);
+    if (typeof payload.exp !== 'number') return true;
+    // Expired if within 60 seconds of exp
+    return Date.now() >= (payload.exp * 1000) - 60000;
+  } catch {
+    return true;
+  }
+}
+
 export async function setAccessToken(token: string | null): Promise<void> {
   accessToken = token;
   try {

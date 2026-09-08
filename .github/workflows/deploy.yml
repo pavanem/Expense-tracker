@@ -3,10 +3,14 @@ name: Deploy to Home Server
 on:
   push:
     branches: [main]
-  workflow_dispatch:          # lets you trigger a deploy manually from GitHub UI
+  workflow_dispatch:          # lets you trigger a deploy or rollback manually from GitHub UI
     inputs:
+      commit_sha:
+        description: "Commit SHA, branch, or tag to deploy/rollback to (leave blank for latest main)"
+        required: false
+        default: ""
       reason:
-        description: "Reason for manual deploy"
+        description: "Reason for manual deploy / rollback"
         required: false
         default: "Manual trigger"
 
@@ -25,6 +29,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.commit_sha || '' }}
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -76,12 +82,21 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      # ── 1. Pull latest code ──────────────────────────────────────────────
-      - name: Pull latest code
+      # ── 1. Pull target code (supports rollback to specific commit/tag) ────
+      - name: Pull target code
         run: |
           cd /home/pavan/Apps/Expense-Tracker
-          git fetch origin main
-          git reset --hard origin/main
+          git fetch origin
+          TARGET_REF="${{ github.event.inputs.commit_sha }}"
+          if [ -z "$TARGET_REF" ]; then
+            echo "Deploying latest origin/main..."
+            git reset --hard origin/main
+          else
+            echo "Rolling back / deploying specific ref: $TARGET_REF"
+            git reset --hard "origin/$TARGET_REF" 2>/dev/null || git reset --hard "$TARGET_REF"
+          fi
+          echo "Currently deployed commit:"
+          git log -1 --oneline
 
       # ── 2. Build images & restart containers ─────────────────────────────
       - name: Build & restart services

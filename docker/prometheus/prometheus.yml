@@ -1,0 +1,21 @@
+﻿global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: expense-tracker
+
+scrape_configs:
+  # Spring Boot Actuator /actuator/prometheus
+  - job_name: expense-tracker-backend
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [ "backend:8080" ]
+        labels:
+          service: backend
+
+  # PostgreSQL metrics via postgres-exporter
+  - job_name: postgres-exporter
+    static_configs:
+      - targets: [ "postgres-exporter:9187" ]
+        labels:
+          service: postgres
